@@ -32,7 +32,7 @@ overlap <- function(hicfile,
                     martset = "hsapiens_gene_ensembl",
                     gbuild = 37,
                     hic.columns = c(1:6,8),
-                    segment.columns = c(1:4),
+                    segment.columns = c(1:5),
                     rna.columns = c(1,8)) {
   # Load biomart for assigning nearest gene and subset in GRanges
   ensembl = useEnsembl(biomart = mart,
@@ -90,7 +90,8 @@ overlap <- function(hicfile,
   colnames(segmentation) <- c("chromosome",
                               "segstart",
                               "segend",
-                              "state")
+                              "state",
+                              "segscore")
 
   segmentation$chromosome <- gsub("^chr", "", segmentation$chromosome)
   epigenetic <- GRanges(seqnames = segmentation$chromosome,
@@ -136,13 +137,15 @@ overlap <- function(hicfile,
                             HiCdata[overlap1$queryHits, "region1start"],
                             HiCdata[overlap1$queryHits, "region1end"],
                             segmentation[overlap1$subjectHits,"state"],
+                            segmentation[overlap1$subjectHits,"segscore"],
                             segmentation[overlap1$subjectHits,"ensembl"],
                             segmentation[overlap1$subjectHits, "FPKM"])
-  colnames(region1data) <- c("overlap1....queryHits..",
+  colnames(region1data) <- c("id",
                              "region1chrom",
                              "region1start",
                              "region1end",
-                             "state",
+                             "state1",
+                             "segscore1",
                              "ensembl1",
                              "FPKM1")
 
@@ -151,212 +154,165 @@ overlap <- function(hicfile,
                             HiCdata[overlap2$queryHits, "region2start"],
                             HiCdata[overlap2$queryHits, "region2end"],
                             segmentation[overlap2$subjectHits,"state"],
+                            segmentation[overlap2$subjectHits,"segscore"],
                             segmentation[overlap2$subjectHits,"ensembl"],
-                            segmentation[overlap2$subjectHits, "FPKM"])
-  colnames(region2data) <- c("overlap2....queryHits..",
+                            segmentation[overlap2$subjectHits, "FPKM"],
+                            HiCdata[overlap2$queryHits, "score"])
+  colnames(region2data) <- c("id",
                              "region2chrom",
                              "region2start",
                              "region2end",
-                             "state",
+                             "state2",
+                             "segscore2",
                              "ensembl2",
-                             "FPKM2")
+                             "FPKM2",
+                             "score")
 
-  #Prioritize epigenetic marks and remove multiple entries for a given segment
-  region1data$state <- ordered(region1data$state,
-                               levels = c("TRS",
-                                          "SCR",
-                                          "HET",
-                                          "RPS",
-                                          "ERC",
-                                          "ER",
-                                          "PRC",
-                                          "PR",
-                                          "EPRC",
-                                          "EPR",
-                                          "PPRC",
-                                          "PPR",
-                                          "CTCFC",
-                                          "CTCF",
-                                          "ARC",
-                                          "AR",
-                                          "EARC",
-                                          "EAR",
-                                          "PARC",
-                                          "PAR"))
+
+  xleft <- bind_cols(HiCneargene1, HiCdata)
+  xleft <- subset(xleft, select = c(1:5))
+  yright <- bind_cols(HiCneargene2, HiCdata)
+  yright <- subset(yright, select = c(1,2,6:9))
+
+  xleft <- mutate(xleft, id=rownames(xleft))
+  xleft$id = as.integer(xleft$id)
+  yright <- mutate(yright, id=rownames(yright))
+  yright$id = as.integer(yright$id)
+
+  xleft <- anti_join(xleft, region1data, by = "id")
+  yright <- anti_join(yright, region2data, by = "id")
+
+  xleft <- mutate(xleft, state1 = "None")
+  yright <- mutate(yright, state2 = "None")
+
+  colnames(xleft)[1:2] <- c("ensembl1", "FPKM1")
+  colnames(yright)[1:2] <- c("ensembl2", "FPKM2")
+
+  region1data$ensembl1 <- as.character(region1data$ensembl1)
+  region1data$state1 <- as.character(region1data$state1)
+  region1data$region1chrom <- as.character(region1data$region1chrom)
+  region2data$ensembl2 <- as.character(region2data$ensembl2)
+  region2data$state2 <- as.character(region2data$state2)
+  region2data$region2chrom <- as.character(region2data$region2chrom)
+
+  region1data <- bind_rows(region1data, xleft)
+  region2data <- bind_rows(region2data, yright)
+
+  region1data[is.na(region1data)] <- 0
+  region2data[is.na(region2data)] <- 0
+
   region1data <- region1data %>%
-    group_by(overlap1....queryHits..) %>%
-    mutate(mark1=state[which.max(state)])
-
-  region1data <- region1data[!duplicated
-                             (region1data[c("overlap1....queryHits..")]),]
-
-  results1 <- data.frame(HiCdata[, "region1chrom"],
-                         HiCdata[, "region1start"],
-                         HiCdata[, "region1end"])
-  results1 <- results1 %>%
-    mutate(ID=rownames(results1))
-  results1$ID = as.integer(results1$ID)
-  colnames(results1) <- c("region1chrom", "region1start", "region1end", "ID")
-  results1 <- results1[c('ID', 'region1chrom', 'region1start', 'region1end')]
-
-  region2data$state <- ordered(region2data$state,
-                               levels = c("TRS",
-                                          "SCR",
-                                          "HET",
-                                          "RPS",
-                                          "ERC",
-                                          "ER",
-                                          "PRC",
-                                          "PR",
-                                          "EPRC",
-                                          "EPR",
-                                          "PPRC",
-                                          "PPR",
-                                          "CTCFC",
-                                          "CTCF",
-                                          "ARC",
-                                          "AR",
-                                          "EARC",
-                                          "EAR",
-                                          "PARC",
-                                          "PAR"))
+    group_by(id) %>%
+    filter(segscore1 == max(segscore1))
+  region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
   region2data <- region2data %>%
-    group_by(overlap2....queryHits..) %>%
-    mutate(mark2=state[which.max(state)])
-
-  region2data <- region2data[!duplicated
-                             (region2data[c("overlap2....queryHits..")]),]
-
-  results2 <- data.frame(HiCdata[, "region2chrom"],
-                         HiCdata[, "region2start"],
-                         HiCdata[, "region2end"])
-  results2 <- results2 %>%
-    mutate(ID=rownames(results2))
-  results2$ID = as.integer(results2$ID)
-  colnames(results2) <- c("region2chrom", "region2start", "region2end", "ID")
-  results2 <- results2[c('ID', 'region2chrom', 'region2start', 'region2end')]
-
-  #Combine HiCdata data with prioritized epigenetic mark
-  results1 <- left_join(results1,
-                        region1data[, c("overlap1....queryHits..",
-                                        "mark1",
-                                        "ensembl1",
-                                        "FPKM1")],
-                        by = c("ID" = "overlap1....queryHits.."))
+    group_by(id) %>%
+    filter(segscore2 == max(segscore2))
+  region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
 
 
-  results2 <- left_join(results2,
-                        region2data[, c("overlap2....queryHits..",
-                                        "mark2",
-                                        "ensembl2",
-                                        "FPKM2")],
-                        by = c("ID" = "overlap2....queryHits.."))
+  final <- as.data.frame(full_join(region1data, region2data, by = "id"))
 
-  #Replace NA genes and FPKM with nearest gene to HiC range
-  results1$ensembl1 <- as.character(results1$ensembl1)
-  results1$ensembl1[is.na(results1$ensembl1)] <-
-    HiCneargene1$ensembl[is.na(results1$ensembl1)]
-
-  results1$FPKM1[is.na(results1$FPKM1)] <-
-    HiCneargene1$FPKM[is.na(results1$FPKM1)]
-
-  results2$ensembl2 <- as.character(results2$ensembl2)
-  results2$ensembl2[is.na(results2$ensembl2)] <-
-    HiCneargene2$ensembl[is.na(results2$ensembl2)]
-
-  results2$FPKM2[is.na(results2$FPKM2)] <-
-    HiCneargene2$FPKM[is.na(results2$FPKM2)]
-
-  #Combine results for HiC region 1 and region 2
-  final <- data.frame(results1[,"ID"],
-                      results1[, "region1chrom"],
-                      results1[, "region1start"],
-                      results1[, "region1end"],
-                      results1[, "mark1"],
-                      results1[, "ensembl1"],
-                      results1[, "FPKM1"],
-                      results2[, "region2chrom"],
-                      results2[, "region2start"],
-                      results2[, "region2end"],
-                      results2[, "mark2"],
-                      results2[, "ensembl2"],
-                      results2[, "FPKM2"],
-                      HiCdata[, "score"])
+  final$FPKM1 <- log(final$FPKM1+1)
+  final$FPKM2 <- log(final$FPKM2+1)
 
   final <- setNames(final, c("ID",
                              "region1chrom",
                              "region1start",
                              "region1end",
                              "mark1",
+                             "segscore1",
                              "gene1",
-                             "FPKM1",
+                             "logFPKM1",
                              "region2chrom",
                              "region2start",
                              "region2end",
                              "mark2",
+                             "segscore2",
                              "gene2",
-                             "FPKM2",
+                             "logFPKM2",
                              "score"))
 
-  #Rename epigenetic marks in final data frame
-  final$mark1 <- as.character.factor (final$mark1)
-  final$mark2 <- as.character.factor (final$mark2)
+  final <- final[!duplicated(final[c("region1chrom",
+                                     "region1start",
+                                     "region1end",
+                                     "mark1",
+                                     "region2chrom",
+                                     "region2start",
+                                     "region2end",
+                                     "mark2")]),]
 
-  final[is.na(final)] <- "None"
-  final$mark1[final$mark1=="AR"] <- "AR"
-  final$mark1[final$mark1=="ARC"] <- "AR"
-  final$mark1[final$mark1=="CTCF"] <- "CTCF"
-  final$mark1[final$mark1=="CTCFC"] <- "CTCF"
+  final$mark1[final$mark1=="AR"] <- "EAR"
+  final$mark1[final$mark1=="ARC"] <- "EAR"
   final$mark1[final$mark1=="EAR"] <- "EAR"
   final$mark1[final$mark1=="EARC"] <- "EAR"
-  final$mark1[final$mark1=="EPR"] <- "EPR"
-  final$mark1[final$mark1=="EPRC"] <- "EPR"
-  final$mark1[final$mark1=="ER"] <- "ER"
-  final$mark1[final$mark1=="ERC"] <- "ER"
+  final$mark1[final$mark1=="EWR"] <- "EPR"
+  final$mark1[final$mark1=="EWRC"] <- "EPR"
   final$mark1[final$mark1=="HET"] <- "HET"
   final$mark1[final$mark1=="PAR"] <- "PAR"
   final$mark1[final$mark1=="PARC"] <- "PAR"
-  final$mark1[final$mark1=="PPR"] <- "PPR"
-  final$mark1[final$mark1=="PPRC"] <- "PPR"
-  final$mark1[final$mark1=="PR"] <- "PR"
-  final$mark1[final$mark1=="PRC"] <- "PR"
+  final$mark1[final$mark1=="PWR"] <- "PPR"
+  final$mark1[final$mark1=="PWRC"] <- "PPR"
   final$mark1[final$mark1=="RPS"] <- "RPS"
   final$mark1[final$mark1=="SCR"] <- "SCR"
   final$mark1[final$mark1=="TRS"] <- "TRS"
 
-  final$mark2[final$mark2=="AR"] <- "AR"
-  final$mark2[final$mark2=="ARC"] <- "AR"
-  final$mark2[final$mark2=="CTCF"] <- "CTCF"
-  final$mark2[final$mark2=="CTCFC"] <- "CTCF"
+  final$mark1[final$mark1=="CTCF"] <- "CTCF"
+  final$mark1[final$mark1=="CTCFC"] <- "CTCF"
+  final$mark1[final$mark1=="ER"] <- "ER"
+  final$mark1[final$mark1=="ERC"] <- "ER"
+  final$mark1[final$mark1=="EPR"] <- "EPR"
+  final$mark1[final$mark1=="EPRC"] <- "EPR"
+  final$mark1[final$mark1=="PR"] <- "PR"
+  final$mark1[final$mark1=="PRC"] <- "PR"
+  final$mark1[final$mark1=="PPR"] <- "PPR"
+  final$mark1[final$mark1=="PPRC"] <- "PPR"
+
+
+  final$mark2[final$mark2=="AR"] <- "EAR"
+  final$mark2[final$mark2=="ARC"] <- "EAR"
   final$mark2[final$mark2=="EAR"] <- "EAR"
   final$mark2[final$mark2=="EARC"] <- "EAR"
-  final$mark2[final$mark2=="EPR"] <- "EPR"
-  final$mark2[final$mark2=="EPRC"] <- "EPR"
-  final$mark2[final$mark2=="ER"] <- "ER"
-  final$mark2[final$mark2=="ERC"] <- "ER"
+  final$mark2[final$mark2=="EWR"] <- "EPR"
+  final$mark2[final$mark2=="EWRC"] <- "EPR"
   final$mark2[final$mark2=="HET"] <- "HET"
   final$mark2[final$mark2=="PAR"] <- "PAR"
   final$mark2[final$mark2=="PARC"] <- "PAR"
-  final$mark2[final$mark2=="PPR"] <- "PPR"
-  final$mark2[final$mark2=="PPRC"] <- "PPR"
-  final$mark2[final$mark2=="PR"] <- "PR"
-  final$mark2[final$mark2=="PRC"] <- "PR"
+  final$mark2[final$mark2=="PWR"] <- "PPR"
+  final$mark2[final$mark2=="PWRC"] <- "PPR"
   final$mark2[final$mark2=="RPS"] <- "RPS"
   final$mark2[final$mark2=="SCR"] <- "SCR"
   final$mark2[final$mark2=="TRS"] <- "TRS"
 
-  final <- GRanges(seqname = final$region1chrom,
-                   ranges = IRanges(start = final$region1start,
-                                    end = final$region1end),
-                   mark1 = final$mark1,
-                   gene1 = final$gene1,
-                   FPKM1 = final$FPKM1,
-                   region2chrom = final$region2chrom,
-                   region2start = final$region2start,
-                   region2end = final$region2end,
-                   mark2 = final$mark2,
-                   gene2 = final$gene2,
-                   FPKM2 = final$FPKM2,
-                   score = final$score)
-  final
+  final$mark2[final$mark2=="CTCF"] <- "CTCF"
+  final$mark2[final$mark2=="CTCFC"] <- "CTCF"
+  final$mark2[final$mark2=="ER"] <- "ER"
+  final$mark2[final$mark2=="ERC"] <- "ER"
+  final$mark2[final$mark2=="EPR"] <- "EPR"
+  final$mark2[final$mark2=="EPRC"] <- "EPR"
+  final$mark2[final$mark2=="PR"] <- "PR"
+  final$mark2[final$mark2=="PRC"] <- "PR"
+  final$mark2[final$mark2=="PPR"] <- "PPR"
+  final$mark2[final$mark2=="PPRC"] <- "PPR"
+
+  finaltable <- (table(final$mark1, final$mark2))
+
+
+  finalG <- GRanges(seqname = final$region1chrom,
+                    ranges = IRanges(start = final$region1start,
+                                     end = final$region1end),
+                    mark1 = final$mark1,
+                    segscore1 = final$segscore1,
+                    gene1 = final$gene1,
+                    logFPKM1 = final$logFPKM1,
+                    region2chrom = final$region2chrom,
+                    region2start = final$region2start,
+                    region2end = final$region2end,
+                    mark2 = final$mark2,
+                    segscore2 = final$segscore2,
+                    gene2 = final$gene2,
+                    logFPKM2 = final$logFPKM2,
+                    HiCscore = final$score)
+
+  finalG
 }

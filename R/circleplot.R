@@ -15,7 +15,7 @@
 circleplot <- function(datatable,
                        plot.subset = FALSE,
                        display.legend = TRUE,
-                       rna.legend = "FPKM",
+                       rna.legend = "logFPKM",
                        hic.legend = "Hi-C Score",
                        circos.color = NULL,
                        ...) {
@@ -27,11 +27,11 @@ circleplot <- function(datatable,
   circosR <- setNames(circosR, c("mark1", "mark2", "Freq"))
 
   #Compute average scores for each group of interactions
-  scoretable <- aggregate(score~mark1 + mark2, data = datatable, FUN = mean)
+  scoretable <- aggregate(HiCscore~mark1 + mark2, data = datatable, FUN = mean)
   colnames(scoretable)[3] <- "Avg.Score"
 
-  FPKM1score <- aggregate(FPKM1~mark1 + mark2, data = datatable, FUN = mean)
-  FPKM2score <- aggregate(FPKM2~mark1 + mark2, data = datatable, FUN = mean)
+  FPKM1score <- aggregate(logFPKM1~mark1 + mark2, data = datatable, FUN = mean)
+  FPKM2score <- aggregate(logFPKM2~mark1 + mark2, data = datatable, FUN = mean)
 
   #Generate table for Heatmap
   circosR$mark1 <- as.character(circosR$mark1)
@@ -176,14 +176,9 @@ circleplot <- function(datatable,
                            end <- 0
                          })
 
-  col_fun2 = colorRamp2(c(min(FPKM1score$FPKM1, FPKM2score$FPKM2),
-                         max(quantile(datatable$FPKM1, probs = seq(.99,
-                                                                   .99,
-                                                                   0.01)),
-                             quantile(datatable$FPKM2, probs = seq(.99,
-                                                                   .99,
-                                                                   0.01)))),
-                       c("white", "black"))
+  col_fun2 = colorRamp2(c(min(FPKM1score$logFPKM1, FPKM2score$logFPKM2),
+                          max(FPKM1score$logFPKM1, FPKM2score$logFPKM2)),
+                        c("white", "black"))
 
   circos.trackPlotRegion(ylim = c(0, 3),
                          circos.par("track.height" = 0.01),
@@ -194,8 +189,8 @@ circleplot <- function(datatable,
                            sector = get.cell.meta.data("sector.index")
                            aux.tab1 <- tab1[tab1$mark1 == sector,]
                            aux.tab2 <- tab2[tab2$mark2 == sector,]
-                           col_tab1 = col_fun2(aux.tab1$FPKM1)
-                           col_tab2 = col_fun2(aux.tab2$FPKM2)
+                           col_tab1 = col_fun2(aux.tab1$logFPKM1)
+                           col_tab2 = col_fun2(aux.tab2$logFPKM2)
                            for(i in 1:nrow(aux.tab1)){
                              start <- end
                              end <- end + aux.tab1[i,"Freq"]
@@ -220,16 +215,14 @@ circleplot <- function(datatable,
 
   if (display.legend == TRUE) {
   legend("bottomleft", title = rna.legend,
-         legend = c(format(round(min(FPKM1score$FPKM1,
-                                     FPKM2score$FPKM2), 1),
+         legend = c(format(round(min(FPKM1score$logFPKM1,
+                                     FPKM2score$logFPKM2), 1),
                            nsmall = 1),
-                    format(round((min(FPKM1score$FPKM1,
-                                      FPKM2score$FPKM2)+
-                                    max(quantile(datatable$FPKM1, probs = seq(.99, .99, 0.01)),
-                                         quantile(datatable$FPKM2, probs = seq(.99, .99, 0.01))))/2, 1),
+                    format(round((min(FPKM1score$logFPKM1,
+                                      FPKM2score$logFPKM2)+
+                                    max(FPKM1score$logFPKM1, FPKM2score$logFPKM2))/2, 1),
                            nsmall = 1),
-                    format(round(max(quantile(datatable$FPKM1, probs = seq(.99, .99, 0.01)),
-                                     quantile(datatable$FPKM2, probs = seq(.99, .99, 0.01))),
+                    format(round(max(FPKM1score$logFPKM1, FPKM2score$logFPKM2),
                                  1),
                            nsmall = 1)),
          fill=colorRampPalette(c("white", "black"))(3))
@@ -245,16 +238,16 @@ circleplot <- function(datatable,
   }
   if (display.legend == "RNA") {
     legend("bottomleft", title = rna.legend,
-           legend = c(format(round(min(FPKM1score$FPKM1,
-                                       FPKM2score$FPKM2), 1),
+           legend = c(format(round(min(FPKM1score$logFPKM1,
+                                       FPKM2score$logFPKM2), 1),
                              nsmall = 1),
-                      format(round((min(FPKM1score$FPKM1,
-                                        FPKM2score$FPKM2)+
-                                      max(FPKM1score$FPKM1,
-                                          FPKM2score$FPKM2))/2, 1),
+                      format(round((min(FPKM1score$logFPKM1,
+                                        FPKM2score$logFPKM2)+
+                                      max(FPKM1score$logFPKM1,
+                                          FPKM2score$logFPKM2))/2, 1),
                              nsmall = 1),
-                      format(round(max(FPKM1score$FPKM1,
-                                       FPKM2score$FPKM2), 1),
+                      format(round(max(FPKM1score$logFPKM1,
+                                       FPKM2score$logFPKM2), 1),
                              nsmall = 1)),
            fill=colorRampPalette(c("white", "black"))(3))
   }
