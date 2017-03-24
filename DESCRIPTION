@@ -1,0 +1,27 @@
+Package: HiCAGE
+Type: Package
+Title: Hi-C Annotation and Graphing Ensemble
+Version: 0.1.0
+Authors@R: person("Michael", "Workman", email = "michael.workman@cshs.org",
+    role = c("aut", "cre"))
+Maintainer: Michael Workman <michael.workman@cshs.org>
+Description: This package takes chromsome conformation capture data as input
+    and annotates each genomic region with segmentation data from StateHub
+    (http://statehub.org/statehub/). This data can then be annotated with
+    the nearest gene and using RNA-seq data, expression values can be linked to
+    each gene. Moreover, these data can be combined into a circle plot with 
+    heatmaps showing average score of chromsome conformation capture 
+    interaction between segmentation marks as well as average FPKM values for
+    genes in each type of interaction.
+Depends: R (>= 3.3.0)
+Imports:readr,
+        tidyr, 
+        dplyr,
+        GenomicRanges,
+        biomaRt,
+        IRanges,
+        magrittr
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
