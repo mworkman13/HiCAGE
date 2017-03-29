@@ -14,7 +14,8 @@
 #' chromosome', 'right start', 'right end', 'interaction score'
 #' @importFrom readr read_tsv read_csv
 #' @importFrom tidyr separate
-#' @importFrom dplyr mutate left_join full_join group_by
+#' @importFrom dplyr mutate left_join full_join group_by bind_rows bind_cols
+#' anti_join filter
 #' @importFrom GenomicRanges GRanges nearest findOverlaps
 #' @importFrom IRanges IRanges
 #' @importFrom biomaRt useEnsembl getBM
@@ -24,7 +25,7 @@
 #' annotated with a prioritized segmentation mark, the nearest gene to the
 #' segmentation mark and the gene's FPKM expression data
 #' @examples
-#' overlap("hicfile.txt", "segmentfile.bed", "rnafile.tsv")
+#' overlap("hic_chr20.txt", "segment_chr20.bed", "rna_chr20.tsv")
 overlap <- function(hicfile,
                     segmentfile,
                     rnafile,
@@ -33,7 +34,7 @@ overlap <- function(hicfile,
                     gbuild = 37,
                     hic.columns = c(1:6,8),
                     segment.columns = c(1:5),
-                    rna.columns = c(1,8)) {
+                    rna.columns = c(1,7)) {
   # Load biomart for assigning nearest gene and subset in GRanges
   ensembl = useEnsembl(biomart = mart,
                        dataset = martset,
@@ -82,10 +83,9 @@ overlap <- function(hicfile,
   #Parse Segmentation data and subset in GenomicRanges
   #Segmentation files from StateHub Default Model
   #http://statehub.org/modeltracks/default_model/
-  segmentation <- read_tsv(file = segmentfile,
-                           col_names = FALSE,
-                           comment = "#",
-                           skip = 1)
+  segmentation <- read.table(file = segmentfile,
+                             comment.char = "#",
+                             skip = 1)
   segmentation <- subset(segmentation, select = segment.columns)
   colnames(segmentation) <- c("chromosome",
                               "segstart",
@@ -98,33 +98,125 @@ overlap <- function(hicfile,
                         ranges = IRanges(start = as.integer(segmentation$segstart),
                                          end = as.integer(segmentation$segend)),
                         mark = as.character(segmentation$state))
-  #Parse RNA seq file
-  RNAseq <- read_tsv(rnafile) %>%
-    separate("gene_id", into = c("gene_id", "extraint"), sep = "\\.")
-  RNAseq <- subset(RNAseq, select = rna.columns)
+  if (rnafile == FALSE) {
+    #Intersect ChIA-PET data with Epigenetic Segmentation Data
 
-  #Find nearest gene to each segmentation and Hi-C location; Add FPKM
-  epineargene <- data.frame(nearest(epigenetic, ensGene, ignore.strand=TRUE))
-  colnames(epineargene) <- "ensembl"
-  epineargene <- data.frame(gene[epineargene$ensembl, "ensembl_gene_id"])
-  colnames(epineargene) <- "ensembl"
-  epineargene$ensembl <- as.character(epineargene$ensembl)
-  epineargene <- left_join(epineargene, RNAseq, by = c("ensembl" = "gene_id"))
-  segmentation <- cbind(segmentation, epineargene)
+    overlap1 <- data.frame(findOverlaps(chiaregion1, epigenetic))
 
-  HiCneargene1 <- data.frame(nearest(chiaregion1, ensGene, ignore.strand=TRUE))
-  colnames(HiCneargene1) <- "ensembl"
-  HiCneargene1 <- data.frame(gene[HiCneargene1$ensembl, "ensembl_gene_id"])
-  colnames(HiCneargene1) <- "ensembl"
-  HiCneargene1$ensembl <- as.character(HiCneargene1$ensembl)
-  HiCneargene1 <- left_join(HiCneargene1, RNAseq, by = c("ensembl" = "gene_id"))
+    overlap2 <- data.frame(findOverlaps(chiaregion2, epigenetic))
 
-  HiCneargene2 <- data.frame(nearest(chiaregion2, ensGene, ignore.strand=TRUE))
-  colnames(HiCneargene2) <- "ensembl"
-  HiCneargene2 <- data.frame(gene[HiCneargene2$ensembl, "ensembl_gene_id"])
-  colnames(HiCneargene2) <- "ensembl"
-  HiCneargene2$ensembl <- as.character(HiCneargene2$ensembl)
-  HiCneargene2 <- left_join(HiCneargene2, RNAseq, by = c("ensembl" = "gene_id"))
+    region1data <- data.frame(overlap1[, "queryHits"],
+                              HiCdata[overlap1$queryHits, "region1chrom"],
+                              HiCdata[overlap1$queryHits, "region1start"],
+                              HiCdata[overlap1$queryHits, "region1end"],
+                              segmentation[overlap1$subjectHits,"state"],
+                              segmentation[overlap1$subjectHits,"segscore"])
+    colnames(region1data) <- c("id",
+                               "region1chrom",
+                               "region1start",
+                               "region1end",
+                               "state1",
+                               "segscore1")
+
+    region2data <- data.frame(overlap2[, "queryHits"],
+                              HiCdata[overlap2$queryHits, "region2chrom"],
+                              HiCdata[overlap2$queryHits, "region2start"],
+                              HiCdata[overlap2$queryHits, "region2end"],
+                              segmentation[overlap2$subjectHits,"state"],
+                              segmentation[overlap2$subjectHits,"segscore"],
+                              HiCdata[overlap2$queryHits, "score"])
+    colnames(region2data) <- c("id",
+                               "region2chrom",
+                               "region2start",
+                               "region2end",
+                               "state2",
+                               "segscore2",
+                               "score")
+
+    xleft <- subset(HiCdata, select = c(1:3))
+    yright <- subset(HiCdata, select = c(4:7))
+
+    xleft <- mutate(xleft, id=rownames(xleft))
+    xleft$id = as.integer(xleft$id)
+    yright <- mutate(yright, id=rownames(yright))
+    yright$id = as.integer(yright$id)
+
+    xleft <- anti_join(xleft, region1data, by = "id")
+    yright <- anti_join(yright, region2data, by = "id")
+
+    xleft <- mutate(xleft, state1 = "None")
+    yright <- mutate(yright, state2 = "None")
+
+    region1data$state1 <- as.character(region1data$state1)
+    region1data$region1chrom <- as.character(region1data$region1chrom)
+    region2data$state2 <- as.character(region2data$state2)
+    region2data$region2chrom <- as.character(region2data$region2chrom)
+
+    region1data <- bind_rows(region1data, xleft)
+    region2data <- bind_rows(region2data, yright)
+
+    region1data[is.na(region1data)] <- 0
+    region2data[is.na(region2data)] <- 0
+
+    region1data <- region1data %>%
+      group_by(id) %>%
+      filter(segscore1 == max(segscore1))
+    region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
+    region2data <- region2data %>%
+      group_by(id) %>%
+      filter(segscore2 == max(segscore2))
+    region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
+
+
+    final <- as.data.frame(full_join(region1data, region2data, by = "id"))
+
+    final <- setNames(final, c("ID",
+                               "region1chrom",
+                               "region1start",
+                               "region1end",
+                               "mark1",
+                               "segscore1",
+                               "region2chrom",
+                               "region2start",
+                               "region2end",
+                               "mark2",
+                               "segscore2",
+                               "score"))
+  }
+
+  else{
+    #Parse RNA seq file
+    RNAseq <- read.table(rnafile,
+                         comment.char = "#",
+                         skip = 1) %>%
+      separate("V1", into = c("gene_id", "extraint"), sep = "\\.")
+    RNAseq <- subset(RNAseq, select = rna.columns)
+    colnames(RNAseq) <- c("gene_id",
+                          "FPKM")
+
+
+    #Find nearest gene to each segmentation and Hi-C location; Add FPKM
+    epineargene <- data.frame(nearest(epigenetic, ensGene, ignore.strand=TRUE))
+    colnames(epineargene) <- "ensembl"
+    epineargene <- data.frame(gene[epineargene$ensembl, "ensembl_gene_id"])
+    colnames(epineargene) <- "ensembl"
+    epineargene$ensembl <- as.character(epineargene$ensembl)
+    epineargene <- left_join(epineargene, RNAseq, by = c("ensembl" = "gene_id"))
+    segmentation <- cbind(segmentation, epineargene)
+
+    HiCneargene1 <- data.frame(nearest(chiaregion1, ensGene, ignore.strand=TRUE))
+    colnames(HiCneargene1) <- "ensembl"
+    HiCneargene1 <- data.frame(gene[HiCneargene1$ensembl, "ensembl_gene_id"])
+    colnames(HiCneargene1) <- "ensembl"
+    HiCneargene1$ensembl <- as.character(HiCneargene1$ensembl)
+    HiCneargene1 <- left_join(HiCneargene1, RNAseq, by = c("ensembl" = "gene_id"))
+
+    HiCneargene2 <- data.frame(nearest(chiaregion2, ensGene, ignore.strand=TRUE))
+    colnames(HiCneargene2) <- "ensembl"
+    HiCneargene2 <- data.frame(gene[HiCneargene2$ensembl, "ensembl_gene_id"])
+    colnames(HiCneargene2) <- "ensembl"
+    HiCneargene2$ensembl <- as.character(HiCneargene2$ensembl)
+    HiCneargene2 <- left_join(HiCneargene2, RNAseq, by = c("ensembl" = "gene_id"))
 
   #Intersect ChIA-PET data with Epigenetic Segmentation Data
 
@@ -232,6 +324,7 @@ overlap <- function(hicfile,
                              "gene2",
                              "logFPKM2",
                              "score"))
+  }
 
   final <- final[!duplicated(final[c("region1chrom",
                                      "region1start",
@@ -297,22 +390,36 @@ overlap <- function(hicfile,
 
   finaltable <- (table(final$mark1, final$mark2))
 
-
+if (rnafile == FALSE) {
   finalG <- GRanges(seqname = final$region1chrom,
                     ranges = IRanges(start = final$region1start,
                                      end = final$region1end),
                     mark1 = final$mark1,
                     segscore1 = final$segscore1,
-                    gene1 = final$gene1,
-                    logFPKM1 = final$logFPKM1,
                     region2chrom = final$region2chrom,
                     region2start = final$region2start,
                     region2end = final$region2end,
                     mark2 = final$mark2,
                     segscore2 = final$segscore2,
-                    gene2 = final$gene2,
-                    logFPKM2 = final$logFPKM2,
                     HiCscore = final$score)
+}
+  else {
+    finalG <- GRanges(seqname = final$region1chrom,
+                      ranges = IRanges(start = final$region1start,
+                                       end = final$region1end),
+                      mark1 = final$mark1,
+                      segscore1 = final$segscore1,
+                      gene1 = final$gene1,
+                      logFPKM1 = final$logFPKM1,
+                      region2chrom = final$region2chrom,
+                      region2start = final$region2start,
+                      region2end = final$region2end,
+                      mark2 = final$mark2,
+                      segscore2 = final$segscore2,
+                      gene2 = final$gene2,
+                      logFPKM2 = final$logFPKM2,
+                      HiCscore = final$score)
+  }
 
   finalG
 }

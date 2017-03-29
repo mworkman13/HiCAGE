@@ -6,7 +6,7 @@
 \usage{
 overlap(hicfile, segmentfile, rnafile, mart = "ensembl",
   martset = "hsapiens_gene_ensembl", gbuild = 37, hic.columns = c(1:6, 8),
-  segment.columns = c(1:4), rna.columns = c(1, 8))
+  segment.columns = c(1:5), rna.columns = c(1, 7))
 }
 \arguments{
 \item{hicfile}{The chromosome conformation capture datafile}
@@ -38,5 +38,5 @@ segmentation mark and the gene's FPKM expression data
 Combine chromosome conformation capture data with segmentation and RNA data
 }
 \examples{
-overlap("hicfile.txt", "segmentfile.bed", "rnafile.tsv")
+overlap("hic_chr20.txt", "segment_chr20.bed", "rna_chr20.tsv")
 }

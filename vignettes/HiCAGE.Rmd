@@ -1,0 +1,149 @@
+---
+title: "HiCAGE: Hi-C Annotation and Graphing Ensemble"
+author: "Michael J. Workman and Dennis J. Hazelett"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    number_sections: true
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{HiCAGE}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+The `HiCAGE` (Hi-C Annotation and Plotting Software) package offers users the 
+ability to annotate and visualize 3C-based genomic data at whole-genome scale. 
+This document describes the functionalities of the package and provides users 
+with detailed descriptions on its use. 
+
+# Package Overview
+`HiCAGE` has a variety of features designed for efficient annotation, analysis, 
+and visualization of interacting chromatin regions. 
+
+## HiCAGE Environment Setup
+`HiCAGE` requires the following packages to be installed:
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(GenomicRanges)
+library(circlize)
+library(ggplot2)
+library(biomaRt)
+library(HiCAGE)
+```
+
+## Input Data
+`HiCAGE` is designed to handle tab-delimited data as input. 3C-based genomic 
+data, segmentation data, and RNA-seq data can all be input. RNA-seq data, 
+however, is optional. Files can be in *txt*, *tsv*, *bed*, or other formats. 
+`HiCAGE` is written to require the least amount of data manipulation prior to 
+loading files by allowing the user to specify the columns containing the 
+necessary data from each data file. Default column selection is setup to handle 
+common data layouts. 
+  
+- Example Hi-C data files: GEO Accession: [GSE63525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE63525)
+- Segmentation data files: *[StateHub/StatepaintR](http://statehub.org/statehub/)*
+- Example RNA-seq data files: GEO Accession: [GSE78557](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE78557)
+or processed [tsv format](https://www.encodeproject.org/experiments/ENCSR000AEM/)
+
+# Code
+Example format for initial data input:
+```{r message = FALSE}
+example <- overlap(hicfile = "../data/hic_chr20.txt", 
+                   segmentfile = "../data/segment_chr20.bed", 
+                   rnafile = "../data/rna_chr20.tsv")
+```
+
+## Column Selection *(Optional based on data format)*
+### Hi-C or 3C-based Data Column Selection
+Example Hi-C data file:
+```{r echo = FALSE, tidy = TRUE}
+head(read.table(file = "../data/hic_chr20.txt", comment.char = "#", skip = 1))
+```
+
+Hi-C data files need to contain the columns in the following example:
+
+Chrom1 | Chrom1Start | Chrom1End | Chrom2 | Chrom2Start | Chrom2End | Score
+------ | ----------- | --------- | ------ | ----------- | --------- | -----
+ "V1"  |     "V2"    |    "V3"   |  "V4"  |     "V5"    |    "V6"   |  "V8"
+ 20    | 13300000    | 13310000  | 20     | 13520000    | 13530000  | 35
+ 20    | 17520000    | 17530000  | 20     | 17590000    | 17600000  | 71
+
+The default `overlap` function selects these columns automatically. If columns are 
+not is this order, user can use `hic.columns` to select the proper columns:
+
+```{r eval = FALSE}
+overlap(hicfile = "../data/hic_chr20.txt", 
+        segmentfile = "../data/segment_chr20.bed", 
+        rnafile = "../data/rna_chr20.tsv",
+        hic.columns = c(1:6, 8))
+```
+
+### Segmentation File Column Selection
+Example *StateHub/StatePaintR* segmentation data file:
+```{r echo = FALSE, tidy = TRUE}
+head(read.table(file = "../data/segment_chr20.bed", comment.char = "#", skip = 1))
+```
+
+Segmentation data files need to contain the columns in the following example:
+
+Chrom | ChromStart | ChromEnd | Mark | Score 
+----- | ---------- | -------- | ---- | ----- 
+ "V1" | "V2"       | "V3"     | "V4" | "V5" 
+chr20 | 62218      | 62675    | EWR  | 0.0000
+chr20 | 117995     | 118433   | HET  | 781.1476
+
+*StateHub/StatePaintR* segmentation files all use the above format. However, 
+users can still select columns containing the necessary information using
+`segment.column` in the `overlap` function:
+
+```{r eval = FALSE}
+overlap(hicfile = "../data/hic_chr20.txt", 
+        segmentfile = "../data/segment_chr20.bed", 
+        rnafile = "../data/rna_chr20.tsv",
+        segment.columns = c(1:5))
+```
+
+### RNA-seq Data File Column Selection
+Example RNA-seq data file:
+```{r echo = FALSE, tidy = TRUE}
+head(read.table(file = "../data/rna_chr20.tsv", comment.char = "#", skip = 1))
+```
+
+RNA-seq data files need to contain only Ensembl gene ID and gene expression 
+data. User can decide to use FPKM or TPM at their discretion:
+
+Ensembl ID        | FPKM | 
+----------        | ---- | 
+ "V1"             | "V7" | 
+ENSG00000249139.1 | 0    | 
+ENSG00000158901.7 | 0    | 
+
+
+User can select columns in the RNA-seq data file using `rna.column` in the 
+`overlap` function:
+
+```{r eval = FALSE}
+overlap(hicfile = "../data/data/hic_chr20.txt", 
+        segmentfile = "../data/data/segment_chr20.bed", 
+        rnafile = "../data/rna_chr20.tsv",
+        rna.columns = c(1, 7))
+```
+
+
+# Data Output
+Data from the `overlap` function is output as a GRanges object. The GRanges 
+object is anchored using the first chromosome and range. All other information
+is stored as metadata
+
+```{r echo = FALSE}
+head(example)
+```
+
+# Figures
+
+```{r fig.height = 6, fig.width = 6, fig.align = "center", fig.cap = "Figure output from HiCAGE circleplot function"}
+circleplot(datatable = example, display.legend = FALSE)
+```
+

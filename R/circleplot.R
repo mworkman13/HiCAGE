@@ -15,8 +15,10 @@
 circleplot <- function(datatable,
                        plot.subset = FALSE,
                        display.legend = TRUE,
-                       rna.legend = "logFPKM",
                        hic.legend = "Hi-C Score",
+                       hic.range = c(0, 130),
+                       rna.legend = "logFPKM",
+                       rna.range = c(0, 3.2),
                        circos.color = NULL,
                        ...) {
 
@@ -30,16 +32,10 @@ circleplot <- function(datatable,
   scoretable <- aggregate(HiCscore~mark1 + mark2, data = datatable, FUN = mean)
   colnames(scoretable)[3] <- "Avg.Score"
 
-  FPKM1score <- aggregate(logFPKM1~mark1 + mark2, data = datatable, FUN = mean)
-  FPKM2score <- aggregate(logFPKM2~mark1 + mark2, data = datatable, FUN = mean)
-
   #Generate table for Heatmap
   circosR$mark1 <- as.character(circosR$mark1)
   circosR$mark2 <- as.character(circosR$mark2)
-
   heatmap <- left_join(circosR, scoretable, by = c("mark1", "mark2"))
-  heatmap <- left_join(heatmap, FPKM1score, by = c("mark1", "mark2"))
-  heatmap <- left_join(heatmap, FPKM2score, by = c("mark1", "mark2"))
 
   if (plot.subset == "hicscore") {
   circos.clear()
@@ -67,8 +63,7 @@ circleplot <- function(datatable,
   }
   , bg.border = NA)
   #Add heatmap to chord diagram
-  col_fun = colorRamp2(c(min(scoretable$Avg.Score),
-                         max(scoretable$Avg.Score)),
+  col_fun = colorRamp2(hic.range,
                        c("white", "red"))
 
   tab1 <- heatmap[order(heatmap$mark1,rev(heatmap$mark2)),]
@@ -110,6 +105,10 @@ circleplot <- function(datatable,
   }
   else {
   #Draw chord diagram
+  FPKM1score <- aggregate(logFPKM1~mark1 + mark2, data = datatable, FUN = mean)
+  FPKM2score <- aggregate(logFPKM2~mark1 + mark2, data = datatable, FUN = mean)
+  heatmap <- left_join(heatmap, FPKM1score, by = c("mark1", "mark2"))
+  heatmap <- left_join(heatmap, FPKM2score, by = c("mark1", "mark2"))
   circos.clear()
   par(pty="s")
   circos.par(points.overflow.warning=FALSE,
@@ -135,8 +134,7 @@ circleplot <- function(datatable,
     }
     , bg.border = NA)
   #Add heatmap to chord diagram
-  col_fun = colorRamp2(c(min(scoretable$Avg.Score),
-                         max(scoretable$Avg.Score)),
+  col_fun = colorRamp2(hic.range,
                        c("white", "red"))
 
   tab1 <- heatmap[order(heatmap$mark1,rev(heatmap$mark2)),]
@@ -213,7 +211,7 @@ circleplot <- function(datatable,
                          })
   }
 
-  if (display.legend == TRUE) {
+  if (display.legend == TRUE & plot.subset == FALSE) {
   legend("bottomleft", title = rna.legend,
          legend = c(format(round(min(FPKM1score$logFPKM1,
                                      FPKM2score$logFPKM2), 1),
@@ -227,13 +225,9 @@ circleplot <- function(datatable,
                            nsmall = 1)),
          fill=colorRampPalette(c("white", "black"))(3))
   legend("bottomright", title = hic.legend,
-         legend = c(format(round(min(scoretable$Avg.Score), 1),
-                           nsmall = 1),
-                    format(round((min(scoretable$Avg.Score)+
-                                    max(scoretable$Avg.Score))/2, 1),
-                           nsmall = 1),
-                    format(round(max(scoretable$Avg.Score), 1),
-                           nsmall = 1)),
+         legend = c(min(hic.range),
+                    (min(hic.range)+max(hic.range))/2,
+                    max(hic.range)),
          fill=colorRampPalette(c("white", "red"))(3))
   }
   if (display.legend == "RNA") {
@@ -251,15 +245,11 @@ circleplot <- function(datatable,
                              nsmall = 1)),
            fill=colorRampPalette(c("white", "black"))(3))
   }
-  if (display.legend == "HIC") {
+  if (display.legend == "HIC" | plot.subset == "hicscore") {
     legend("bottomright", title = hic.legend,
-           legend = c(format(round(min(scoretable$Avg.Score), 1),
-                             nsmall = 1),
-                      format(round((min(scoretable$Avg.Score)+
-                                      max(scoretable$Avg.Score))/2, 1),
-                             nsmall = 1),
-                      format(round(max(scoretable$Avg.Score), 1),
-                             nsmall = 1)),
+           legend = c(min(hic.range),
+                      (min(hic.range)+max(hic.range))/2,
+                      max(hic.range)),
            fill=colorRampPalette(c("white", "red"))(3))
   }
 

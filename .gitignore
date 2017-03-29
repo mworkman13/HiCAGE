@@ -1,0 +1,8 @@
+.Rbuildignore
+*.Rhistory
+*.pper
+.Rproj.user
+hicfile.txt
+rnafile.tsv
+segmentfile.bed
+inst/doc
