@@ -131,8 +131,65 @@ overlap(hicfile = "../data/data/hic_chr20.txt",
         rna.columns = c(1, 7))
 ```
 
+## biomaRt Selection
+`HiCAGE` enables users to select various biomaRts using the `biomaRt` package,
+allowing for flexibility in species and genome build for annotating 
+genomic regions. Default genome selection is `"hsapiens_gene_ensembl"` genome 
+build 37. Currently, only genome build 37 and 38 are available. Genome 
+selection must match the genome used to compile the 3C-based data file. 
+
+The biomaRt can be specified in the `overlap` function and will be passed
+on to the `biomaRt` package
+
+```{r eval = FALSE}
+overlap <- function(hicfile,
+                    segmentfile,
+                    rnafile,
+                    mart = "ensembl",
+                    martset = "hsapiens_gene_ensembl",
+                    gbuild = 37
+```
+
+###Sample of currently available datasets in the "ensembl" Mart:
+
+dataset	                  |	description	                   |	version
+---------	                |	---------	                     |	--------
+hsapiens_gene_ensembl   	|	Human genes                    |	GRCh38.p7
+mmusculus_gene_ensembl  	|	Mouse genes                    |	GRCm38.p5
+rnorvegicus_gene_ensembl  |	Rat genes                      |	Rnor_6.0
+dmelanogaster_gene_ensembl|	Fruitfly genes                 |	BDGP6
+scerevisiae_gene_ensembl	|	Saccharomyces cerevisiae genes |	R64-1-1
+celegans_gene_ensembl	    |	Caenorhabditis elegans genes   |	WBcel235
+ocuniculus_gene_ensembl	  |	Rabbit genes                   |	OryCun2.0
+xtropicalis_gene_ensembl	|	Xenopus genes                  |	JGI 4.2
+drerio_gene_ensembl      	|	Zebrafish genes                |	GRCz10
+
+
+###Currently available datasets in the "ENSEMBL_MART_MOUSE" Mart:
+
+dataset	                |	description	           |	version
+---------	              |	---------	             |	------
+mwsbeij_gene_ensembl    |	Mouse WSBEiJ genes     | WSB_EiJ_v1
+mc3hhej_gene_ensembl	  |	Mouse C3HHeJ genes     | C3H_HeJ_v1
+mc57bl6nj_gene_ensembl	|	Mouse C57BL6NJ genes   | C57BL_6NJ_v1
+mnzohlltj_gene_ensembl  |	Mouse NZOHlLtJ genes   | NZO_HlLtJ_v1
+mpwkphj_gene_ensembl    |	Mouse PWKPhJ genes     | PWK_PhJ_v1
+mfvbnj_gene_ensembl	    |	Mouse FVBNJ genes      | FVB_NJ_v1
+mcbaj_gene_ensembl      |	Mouse CBAJ genes       | CBA_J_v1
+mcasteij_gene_ensembl	  |	Mouse CASTEiJ genes    | CAST_EiJ_v1
+mlpj_gene_ensembl	      |	Mouse LPJ genes        | LP_J_v1
+makrj_gene_ensembl	    |	Mouse AKRJ genes       | AKR_J_v1
+mbalbcj_gene_ensembl	  |	Mouse BALBcJ genes     | BALB_cJ_v1
+mnodshiltj_gene_ensembl	|	Mouse NODShiLtJ genes  | NOD_ShiLtJ_v1
+m129s1svimj_gene_ensembl|	Mouse 129S1SvImJ genes | 129S1_SvImJ_v1
+mspreteij_gene_ensembl	|	Mouse SPRETEiJ genes 	 | SPRET_EiJ_v1
+mdba2j_gene_ensembl	    |	Mouse DBA2J genes      | DBA_2J_v1
+maj_gene_ensembl	      |	Mouse AJ genes         | A_J_v1
+
+
 
 # Data Output
+## `overlap` Data Output
 Data from the `overlap` function is output as a GRanges object. The GRanges 
 object is anchored using the first chromosome and range. All other information
 is stored as metadata
@@ -140,6 +197,19 @@ is stored as metadata
 ```{r echo = FALSE}
 head(example)
 ```
+
+## `gogenelist` Data Output
+The `gogenelist` function allows the user to conveniently select a chromatin 
+mark of interest (proximalmark) interacting with another chromatin mark 
+(distalmark) and generates an ordered list of all genes and expression data 
+associated with the proximalmark.
+
+```{r}
+gogenelist(datafile = example,
+           proximalmark = "PAR",
+           distalmark = "EAR")
+```
+
 
 # Figures
 

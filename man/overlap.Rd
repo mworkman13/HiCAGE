@@ -39,4 +39,6 @@ Combine chromosome conformation capture data with segmentation and RNA data
 }
 \examples{
 overlap("hic_chr20.txt", "segment_chr20.bed", "rna_chr20.tsv")
+example <- overlap(hicfile = "data/hic_chr20.txt", segmentfile = "data/segment_chr20.bed", rnafile = "data/rna_chr20.tsv")
+example <- overlap(hicfile = "data/hic.txt", segmentfile = "data/segment.bed", rnafile = "data/rna.tsv")
 }

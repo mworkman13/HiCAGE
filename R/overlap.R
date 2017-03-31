@@ -26,6 +26,8 @@
 #' segmentation mark and the gene's FPKM expression data
 #' @examples
 #' overlap("hic_chr20.txt", "segment_chr20.bed", "rna_chr20.tsv")
+#' example <- overlap(hicfile = "data/hic_chr20.txt", segmentfile = "data/segment_chr20.bed", rnafile = "data/rna_chr20.tsv")
+#' example <- overlap(hicfile = "data/hic.txt", segmentfile = "data/segment.bed", rnafile = "data/rna.tsv")
 overlap <- function(hicfile,
                     segmentfile,
                     rnafile,
@@ -50,9 +52,11 @@ overlap <- function(hicfile,
                      ranges = IRanges(start = as.integer(gene$start_position),
                                       end = as.integer(gene$end_position)))
   # Manual select allows user to manual choose columns from Hi-C datafile
-    HiCdata <- read.table(file = hicfile,
-                          comment.char = "#",
-                          skip = 1)
+    HiCdata <- read_tsv(file = hicfile,
+                        col_names = FALSE,
+                        comment = "#",
+                        skip = 1,
+                        guess_max = 100000)
     HiCdata <- subset(HiCdata, select = hic.columns)
     colnames(HiCdata) <- c("region1chrom",
                            "region1start",
@@ -83,9 +87,11 @@ overlap <- function(hicfile,
   #Parse Segmentation data and subset in GenomicRanges
   #Segmentation files from StateHub Default Model
   #http://statehub.org/modeltracks/default_model/
-  segmentation <- read.table(file = segmentfile,
-                             comment.char = "#",
-                             skip = 1)
+  segmentation <- read_tsv(file = segmentfile,
+                           col_names = FALSE,
+                           comment = "#",
+                           skip = 1,
+                           guess_max = 100000)
   segmentation <- subset(segmentation, select = segment.columns)
   colnames(segmentation) <- c("chromosome",
                               "segstart",
@@ -186,10 +192,12 @@ overlap <- function(hicfile,
 
   else{
     #Parse RNA seq file
-    RNAseq <- read.table(rnafile,
-                         comment.char = "#",
-                         skip = 1) %>%
-      separate("V1", into = c("gene_id", "extraint"), sep = "\\.")
+    RNAseq <- read_tsv(rnafile,
+                       col_names = FALSE,
+                       comment = "#",
+                       skip = 1,
+                       guess_max = 100000) %>%
+      separate("X1", into = c("gene_id", "extraint"), sep = "\\.")
     RNAseq <- subset(RNAseq, select = rna.columns)
     colnames(RNAseq) <- c("gene_id",
                           "FPKM")
@@ -323,7 +331,7 @@ overlap <- function(hicfile,
                              "segscore2",
                              "gene2",
                              "logFPKM2",
-                             "score"))
+                             "HiCscore"))
   }
 
   final <- final[!duplicated(final[c("region1chrom",
@@ -401,7 +409,7 @@ if (rnafile == FALSE) {
                     region2end = final$region2end,
                     mark2 = final$mark2,
                     segscore2 = final$segscore2,
-                    HiCscore = final$score)
+                    HiCscore = final$HiCscore)
 }
   else {
     finalG <- GRanges(seqname = final$region1chrom,
@@ -418,8 +426,8 @@ if (rnafile == FALSE) {
                       segscore2 = final$segscore2,
                       gene2 = final$gene2,
                       logFPKM2 = final$logFPKM2,
-                      HiCscore = final$score)
+                      HiCscore = final$HiCscore)
   }
 
-  finalG
+  final
 }

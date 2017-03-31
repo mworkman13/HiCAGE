@@ -59,5 +59,7 @@ gogenelist <- function(datafile,
                                           "hgnc_symbol",
                                           "logFPKM"))
   }
+  else {}
+
   gorilla
 }
