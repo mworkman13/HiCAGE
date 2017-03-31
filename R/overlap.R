@@ -104,7 +104,7 @@ overlap <- function(hicfile,
                         ranges = IRanges(start = as.integer(segmentation$segstart),
                                          end = as.integer(segmentation$segend)),
                         mark = as.character(segmentation$state))
-  if (rnafile == FALSE) {
+  if (is.null(rnafile)) {
     #Intersect ChIA-PET data with Epigenetic Segmentation Data
 
     overlap1 <- data.frame(findOverlaps(chiaregion1, epigenetic))
@@ -187,7 +187,7 @@ overlap <- function(hicfile,
                                "region2end",
                                "mark2",
                                "segscore2",
-                               "score"))
+                               "HiCscore"))
   }
 
   else{
@@ -397,37 +397,6 @@ overlap <- function(hicfile,
   final$mark2[final$mark2=="PPRC"] <- "PPR"
 
   finaltable <- (table(final$mark1, final$mark2))
-
-if (rnafile == FALSE) {
-  finalG <- GRanges(seqname = final$region1chrom,
-                    ranges = IRanges(start = final$region1start,
-                                     end = final$region1end),
-                    mark1 = final$mark1,
-                    segscore1 = final$segscore1,
-                    region2chrom = final$region2chrom,
-                    region2start = final$region2start,
-                    region2end = final$region2end,
-                    mark2 = final$mark2,
-                    segscore2 = final$segscore2,
-                    HiCscore = final$HiCscore)
-}
-  else {
-    finalG <- GRanges(seqname = final$region1chrom,
-                      ranges = IRanges(start = final$region1start,
-                                       end = final$region1end),
-                      mark1 = final$mark1,
-                      segscore1 = final$segscore1,
-                      gene1 = final$gene1,
-                      logFPKM1 = final$logFPKM1,
-                      region2chrom = final$region2chrom,
-                      region2start = final$region2start,
-                      region2end = final$region2end,
-                      mark2 = final$mark2,
-                      segscore2 = final$segscore2,
-                      gene2 = final$gene2,
-                      logFPKM2 = final$logFPKM2,
-                      HiCscore = final$HiCscore)
-  }
 
   final
 }

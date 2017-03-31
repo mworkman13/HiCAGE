@@ -39,31 +39,46 @@ shinyServer(function(input, output, session) {
                       comment = "#",
                       skip = 1)
   })
+
   #Render Final Data Frame
   observeEvent(input$goButton, {
-  get.overlaps <- reactive({
-    isolate({
+    get.overlaps <- reactive({
+      isolate({
       inFile1 <- input$hicdata
-      inFile3 <- input$rnadata
       inFile2 <- input$segmentdata
+      inFile3 <- input$rnadata
       })
+      
+      ##Pick genome for biomaRt based on selected from dropbox
+      if (input$genomes == 1) {
+        genome <- "hsapiens_gene_ensembl"
+        build <- 37
+      }
+      else if (input$genomes == 2){
+        genome <- "hsapiens_gene_ensembl"
+        build <- NULL
+      }
+      else if (input$genomes == 3){
+        genome <- "mmusculus_gene_ensembl"
+        build <- 37
+      }
+      else {
+        genome <- "mmusculus_gene_ensembl"
+        build <- NULL
+      }
 
-    return(overlap(inFile1$datapath,
+      ##Run the overlap function from HiCAGE package
+      return(overlap(inFile1$datapath,
                    inFile2$datapath,
                    inFile3$datapath,
                    hic.columns = as.numeric(unlist(strsplit(input$hiccolumns,","))),
                    segment.columns = as.numeric(unlist(strsplit(input$segmentcolumns,","))),
                    rna.columns = as.numeric(unlist(strsplit(input$rnacolumns,","))),
-                   martset = input$species))
+                   martset = genome,
+                   gbuild = build))
     })
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste("data-", Sys.Date(), ".csv", sep="")
-    },
-    content = function(file) {
-      write.csv(get.overlaps(), file, row.names = FALSE)
-    }
-  )
+    
+    #Show progress bar on GUI
     output$finaldata <- renderDataTable({
       withProgress(message = 'Processing',
                    detail = 'This may take a moment...', value = 0, {
@@ -72,13 +87,50 @@ shinyServer(function(input, output, session) {
                    })
       return(result)
     })
-
+    
+    #Change to Final Data tab when Run button is pressed
     updateTabsetPanel(session, "inTabset",
                       selected = "Final Data")
+    
+    #Prepare Final table of all interaction for downloading to csv file
+    output$downloadData <- downloadHandler(
+      filename = function() {
+        paste("data-", Sys.time(), ".csv", sep="")
+      },
+      content = function(file) {
+        write.csv(get.overlaps(), file, row.names = FALSE)
+      }
+    )
     #Generate Circos Plot
+    ##Set plot.subset to plot only Hi-C data if RNA-seq file is missing
+    if (is.null(input$rnadata)) {
+      plotsub <- "hicscore"
+    }
+    else {
+      plotsub <- FALSE
+    }
     output$circosplot <- renderPlot({
-    circleplot(get.overlaps())
+    circleplot(get.overlaps(),
+               plot.subset = plotsub)
       })
+    #Prepare Circos Plot for Download
+    output$downloadPlot <- downloadHandler(
+      filename = function() {
+        paste("plot-", Sys.time(), '.png', sep='')},
+      content = function(file) {
+        png(file,
+            width = 9,
+            height = 9,
+            units = "in",
+            pointsize = 20,
+            bg = "white",
+            res = 300)
+        circleplot(get.overlaps(),
+                   plot.subset = plotsub)
+        dev.off()},
+      contentType = 'image/png')
+    
+    
     })
 
 })
