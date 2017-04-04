@@ -174,8 +174,7 @@ circleplot <- function(datatable,
                            end <- 0
                          })
 
-  col_fun2 = colorRamp2(c(min(FPKM1score$logFPKM1, FPKM2score$logFPKM2),
-                          max(FPKM1score$logFPKM1, FPKM2score$logFPKM2)),
+  col_fun2 = colorRamp2(rna.range,
                         c("white", "black"))
 
   circos.trackPlotRegion(ylim = c(0, 3),
@@ -213,16 +212,9 @@ circleplot <- function(datatable,
 
   if (display.legend == TRUE & plot.subset == FALSE) {
   legend("bottomleft", title = rna.legend,
-         legend = c(format(round(min(FPKM1score$logFPKM1,
-                                     FPKM2score$logFPKM2), 1),
-                           nsmall = 1),
-                    format(round((min(FPKM1score$logFPKM1,
-                                      FPKM2score$logFPKM2)+
-                                    max(FPKM1score$logFPKM1, FPKM2score$logFPKM2))/2, 1),
-                           nsmall = 1),
-                    format(round(max(FPKM1score$logFPKM1, FPKM2score$logFPKM2),
-                                 1),
-                           nsmall = 1)),
+         legend = c(min(rna.range),
+                    (min(rna.range)+max(rna.range))/2,
+                    max(rna.range)),
          fill=colorRampPalette(c("white", "black"))(3))
   legend("bottomright", title = hic.legend,
          legend = c(min(hic.range),
@@ -232,17 +224,9 @@ circleplot <- function(datatable,
   }
   if (display.legend == "RNA") {
     legend("bottomleft", title = rna.legend,
-           legend = c(format(round(min(FPKM1score$logFPKM1,
-                                       FPKM2score$logFPKM2), 1),
-                             nsmall = 1),
-                      format(round((min(FPKM1score$logFPKM1,
-                                        FPKM2score$logFPKM2)+
-                                      max(FPKM1score$logFPKM1,
-                                          FPKM2score$logFPKM2))/2, 1),
-                             nsmall = 1),
-                      format(round(max(FPKM1score$logFPKM1,
-                                       FPKM2score$logFPKM2), 1),
-                             nsmall = 1)),
+           legend = c(min(rna.range),
+                      (min(rna.range)+max(rna.range))/2,
+                      max(rna.range)),
            fill=colorRampPalette(c("white", "black"))(3))
   }
   if (display.legend == "HIC" | plot.subset == "hicscore") {

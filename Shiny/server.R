@@ -48,7 +48,7 @@ shinyServer(function(input, output, session) {
       inFile2 <- input$segmentdata
       inFile3 <- input$rnadata
       })
-      
+
       ##Pick genome for biomaRt based on selected from dropbox
       if (input$genomes == 1) {
         genome <- "hsapiens_gene_ensembl"
@@ -77,7 +77,7 @@ shinyServer(function(input, output, session) {
                    martset = genome,
                    gbuild = build))
     })
-    
+
     #Show progress bar on GUI
     output$finaldata <- renderDataTable({
       withProgress(message = 'Processing',
@@ -87,11 +87,11 @@ shinyServer(function(input, output, session) {
                    })
       return(result)
     })
-    
+
     #Change to Final Data tab when Run button is pressed
     updateTabsetPanel(session, "inTabset",
                       selected = "Final Data")
-    
+
     #Prepare Final table of all interaction for downloading to csv file
     output$downloadData <- downloadHandler(
       filename = function() {
@@ -101,6 +101,7 @@ shinyServer(function(input, output, session) {
         write.csv(get.overlaps(), file, row.names = FALSE)
       }
     )
+
     #Generate Circos Plot
     ##Set plot.subset to plot only Hi-C data if RNA-seq file is missing
     if (is.null(input$rnadata)) {
@@ -111,9 +112,11 @@ shinyServer(function(input, output, session) {
     }
     output$circosplot <- renderPlot({
     circleplot(get.overlaps(),
-               plot.subset = plotsub)
+               plot.subset = plotsub,
+               hic.range = c(input$hicscale),
+               rna.range = c(input$rnascale))
       })
-    #Prepare Circos Plot for Download
+    ##Prepare Circos Plot for Download
     output$downloadPlot <- downloadHandler(
       filename = function() {
         paste("plot-", Sys.time(), '.png', sep='')},
@@ -126,11 +129,43 @@ shinyServer(function(input, output, session) {
             bg = "white",
             res = 300)
         circleplot(get.overlaps(),
-                   plot.subset = plotsub)
+                   plot.subset = plotsub,
+                   hic.range = c(input$hicscale),
+                   rna.range = c(input$rnascale))
         dev.off()},
       contentType = 'image/png')
-    
-    
+
+    #Go Gene List
+    output$Box1 = renderUI(
+      selectInput("golist1",
+                  label = "Get genes near:",
+                  choices = c(unique(c(get.overlaps()$mark1, get.overlaps()$mark2)))))
+    output$Box2 = renderUI(
+      selectInput("golist2",
+                  label = "Interacting with:",
+                  choices = c(unique(c(get.overlaps()$mark1, get.overlaps()$mark2)))))
+
+    get.genelist <- reactive({
+      return(gogenelist(get.overlaps(),
+                        proximalmark = input$golist1,
+                        distalmark = input$golist2))
+      })
+
+    output$genelist <- renderDataTable(
+        return(get.genelist()))
+
+    output$downloadGene <- downloadHandler(
+      filename = function() {
+        paste("genelist-",
+              Sys.time(), "-",
+              input$golist1, "-",
+              input$golist2, ".csv", sep="")
+      },
+      content = function(file) {
+        write.csv(get.genelist(), file, row.names = FALSE)
+      }
+    )
+
     })
 
 })
