@@ -3,6 +3,7 @@
 export(circleplot)
 export(gogenelist)
 export(overlap)
+export(hicageshiny)
 importFrom(GenomicRanges,GRanges)
 importFrom(GenomicRanges,findOverlaps)
 importFrom(GenomicRanges,nearest)
