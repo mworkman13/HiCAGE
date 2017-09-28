@@ -69,6 +69,7 @@ hicageshiny <- function() {
 
     server = function(input, output, session) {
       #Load Hi-C data file
+      options(shiny.maxRequestSize=100*1024^2)
       output$contents <- renderDataTable({
         inFile1 <- input$hicdata
 
