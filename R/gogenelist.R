@@ -18,6 +18,12 @@
 #' @return Returns a gene list sorted by gene expression levels of all genes
 #' near the proximal mark that are interacting with the distal mark
 #' @examples
+#' hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
+#' segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
+#' rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
+#' overlapoutput <- overlap(hicfile = hic_chr20,
+#'                          segmentfile = segment_chr20,
+#'                          rnafile = rna_chr20)
 #' gogenelist(datafile = overlapoutput, proximalmark = "PAR", distalmark = "EAR")
 
 gogenelist <- function(datafile,

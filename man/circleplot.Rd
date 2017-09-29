@@ -20,6 +20,8 @@ circleplot(datatable, plot.subset = FALSE, display.legend = TRUE,
 
 \item{rna.legend}{Title for RNA legend}
 
+\item{rna.range}{A vector representing the low and high values for the legend of RNA values}
+
 \item{circos.color}{Passes colors to chord diagram for each group}
 }
 \description{
