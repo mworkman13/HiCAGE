@@ -18,6 +18,11 @@
 #' @import graphics
 #' @import grDevices
 #' @export
+#' @examples
+#' overlap(hicfile = hic_chr20,
+#' segmentfile = segment_chr20,
+#' rnafile = rna_chr20
+#' rna.columns = c(1, 7))
 
 circleplot <- function(datatable,
                        plot.subset = FALSE,

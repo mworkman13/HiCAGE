@@ -31,3 +31,9 @@ circleplot(datatable, plot.subset = FALSE, display.legend = TRUE,
 \description{
 Generate circos plots from overlap data output
 }
+\examples{
+overlap(hicfile = hic_chr20,
+segmentfile = segment_chr20,
+rnafile = rna_chr20
+rna.columns = c(1, 7))
+}
