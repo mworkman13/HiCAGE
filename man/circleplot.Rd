@@ -18,22 +18,33 @@ circleplot(datatable, plot.subset = FALSE, display.legend = TRUE,
 
 \item{hic.legend}{Title for Hi-C legend}
 
-\item{hic.range}{A vector representing the low and high values for the legend of Hi-C values}
+\item{hic.range}{A vector representing the low and high values for the legend
+of Hi-C values}
 
 \item{rna.legend}{Title for RNA legend}
 
-\item{rna.range}{A vector representing the low and high values for the legend of RNA values}
+\item{rna.range}{A vector representing the low and high values for the legend
+of RNA values}
 
 \item{circos.color}{Passes colors to chord diagram for each group}
 
 \item{...}{Addtional arguments passed to chordDiagram function}
 }
+\value{
+Generates a chord diagram containing circluar tracks with an inner
+track displaying  average Hi-C interaction score and an inner track with
+displaying average RNA-seq log(FPKM) values for each segment in the plot
+}
 \description{
 Generate circos plots from overlap data output
 }
 \examples{
+hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
+segment_chr20 <- system.file("extdata", "segment_chr20.bed",
+    package = "HiCAGE")
+rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
 overlap(hicfile = hic_chr20,
-segmentfile = segment_chr20,
-rnafile = rna_chr20
-rna.columns = c(1, 7))
+        segmentfile = segment_chr20,
+        rnafile = rna_chr20,
+        rna.columns = c(1, 7))
 }

@@ -3,6 +3,8 @@
 #' @import shiny
 #' @importFrom readr read_tsv
 #' @export
+#' @return When run, function will launch the HiCAGE Shiny application - a GUI
+#' for user-friendly implementation of HiCAGE
 hicageshiny <- function() {
   options(shiny.maxRequestSize=100*1024^2)
   shinyApp(
@@ -22,12 +24,13 @@ hicageshiny <- function() {
         helpText(h4(list(em("Step 3"), "- Select Data Columns:"))),
         textInput('hiccolumns',
                   label = list(h5(strong("Enter Hi-C Column Numbers")),
-                               h6("Order = Chrom1, Chrom1start, Chrom1end, Chrom2,
-                                  Chrom2start, Chrom2end, Score")),
+                               h6("Order = Chrom1, Chrom1start, Chrom1end,
+                                  Chrom2, Chrom2start, Chrom2end, Score")),
                   value = "1, 2, 3, 4, 5, 6, 8"),
         textInput('segmentcolumns',
                   label = list(h5(strong("Enter Segmentation Column Numbers")),
-                               h6("Order = Chromosome, Start, End, Mark, Score")),
+                               h6("Order = Chromosome, Start, End,
+                                  Mark, Score")),
                   value = "1, 2, 3, 4, 5"),
         textInput('rnacolumns',
                   label = list(h5(strong("Enter RNA Column Numbers")),
@@ -54,12 +57,15 @@ hicageshiny <- function() {
                                                             min = 0,
                                                             max = 1000,
                                                             value = c(0, 100))),
-                                      column(4, sliderInput("rnascale",
-                                                            "RNA Expression Range:",
-                                                            min = 0,
-                                                            max = 20,
-                                                            value = c(0, 5))),
-                                      column(4, actionButton("reload", "Reload"))),
+                                      column(4,
+                                             sliderInput(
+                                               "rnascale",
+                                               "RNA Expression Range:",
+                                               min = 0,
+                                               max = 20,
+                                               value = c(0, 5))),
+                                      column(4,
+                                             actionButton("reload", "Reload"))),
                              downloadButton('downloadPlot', 'Download')),
                     tabPanel("Gene List",
                              fluidRow(column(3, uiOutput("Box1")),
@@ -142,9 +148,13 @@ hicageshiny <- function() {
           return(overlap(inFile1$datapath,
                          inFile2$datapath,
                          inFile3$datapath,
-                         hic.columns = as.numeric(unlist(strsplit(input$hiccolumns,","))),
-                         segment.columns = as.numeric(unlist(strsplit(input$segmentcolumns,","))),
-                         rna.columns = as.numeric(unlist(strsplit(input$rnacolumns,","))),
+                         hic.columns =
+                           as.numeric(unlist(strsplit(input$hiccolumns,","))),
+                         segment.columns =
+                           as.numeric(unlist(strsplit(
+                             input$segmentcolumns,","))),
+                         rna.columns =
+                           as.numeric(unlist(strsplit(input$rnacolumns,","))),
                          martset = genome,
                          gbuild = build))
         })
@@ -210,11 +220,13 @@ hicageshiny <- function() {
         output$Box1 = renderUI(
           selectInput("golist1",
                       label = "Get genes near:",
-                      choices = c(unique(c(get.overlaps()$mark1, get.overlaps()$mark2)))))
+                      choices = c(unique(c(get.overlaps()$mark1,
+                                           get.overlaps()$mark2)))))
         output$Box2 = renderUI(
           selectInput("golist2",
                       label = "Interacting with:",
-                      choices = c(unique(c(get.overlaps()$mark1, get.overlaps()$mark2)))))
+                      choices = c(unique(c(get.overlaps()$mark1,
+                                           get.overlaps()$mark2)))))
 
         get.genelist <- reactive({
           return(gogenelist(get.overlaps(),

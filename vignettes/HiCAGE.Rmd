@@ -40,9 +40,11 @@ loading files by allowing the user to specify the columns containing the
 necessary data from each data file. Default column selection is setup to handle 
 common data layouts. 
   
-- Example Hi-C data files: GEO Accession: [GSE63525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE63525)
+- Example Hi-C data files: GEO Accession: 
+[GSE63525](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE63525)
 - Segmentation data files: *[StateHub/StatepaintR](http://statehub.org/statehub/)*
-- Example RNA-seq data files: GEO Accession: [GSE78557](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE78557)
+- Example RNA-seq data files: GEO Accession: 
+[GSE78557](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE78557)
 or processed [tsv format](https://www.encodeproject.org/experiments/ENCSR000AEM/)
 
 # Code
@@ -72,8 +74,8 @@ Chrom1 | Chrom1Start | Chrom1End | Chrom2 | Chrom2Start | Chrom2End | Score
  20    | 13300000    | 13310000  | 20     | 13520000    | 13530000  | 35
  20    | 17520000    | 17530000  | 20     | 17590000    | 17600000  | 71
 
-The default `overlap` function selects these columns automatically. If columns are 
-not is this order, user can use `hic.columns` to select the proper columns:
+The default `overlap` function selects these columns automatically. If columns 
+are not is this order, user can use `hic.columns` to select the proper columns:
 
 ```{r eval = FALSE}
 overlap(hicfile = hic_chr20, 
@@ -129,7 +131,7 @@ User can select columns in the RNA-seq data file using `rna.column` in the
 ```{r eval = FALSE}
 overlap(hicfile = hic_chr20, 
         segmentfile = segment_chr20, 
-        rnafile = rna_chr20
+        rnafile = rna_chr20,
         rna.columns = c(1, 7))
 ```
 

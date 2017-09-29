@@ -1,4 +1,5 @@
-#' Combine chromosome conformation capture data with segmentation and RNA data
+#' Combine chromosome conformation capture data with
+#' segmentation and RNA data
 #'
 #' @param hicfile The chromosome conformation capture datafile
 #' @param segmentfile The segmentation datafile from StateHub
@@ -28,7 +29,8 @@
 #' segmentation mark and the gene's FPKM expression data
 #' @examples
 #' hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
-#' segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
+#' segment_chr20 <- system.file("extdata", "segment_chr20.bed",
+#'     package = "HiCAGE")
 #' rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
 #' example <- overlap(hicfile = hic_chr20,
 #'                    segmentfile = segment_chr20,
@@ -81,13 +83,15 @@ overlap <- function(hicfile,
 
   chiaregion1 <- subset(HiCdata, select = c(1:3))
   chiaregion1 <- GRanges(seqnames = chiaregion1$region1chrom,
-                         ranges = IRanges(start = as.integer(chiaregion1$region1start),
-                                          end = as.integer(chiaregion1$region1end)))
+                         ranges =
+                           IRanges(start = as.integer(chiaregion1$region1start),
+                                   end = as.integer(chiaregion1$region1end)))
 
   chiaregion2 <- subset(HiCdata, select = c(4:6))
   chiaregion2 <- GRanges(seqnames = chiaregion2$region2chrom,
-                         ranges = IRanges(start = as.integer(chiaregion2$region2start),
-                                          end = as.integer(chiaregion2$region2end)))
+                         ranges =
+                           IRanges(start = as.integer(chiaregion2$region2start),
+                                   end = as.integer(chiaregion2$region2end)))
 
   #Parse Segmentation data and subset in GenomicRanges
   #Segmentation files from StateHub Default Model
@@ -106,8 +110,10 @@ overlap <- function(hicfile,
 
   segmentation$chromosome <- gsub("^chr", "", segmentation$chromosome)
   epigenetic <- GRanges(seqnames = segmentation$chromosome,
-                        ranges = IRanges(start = as.integer(segmentation$segstart),
-                                         end = as.integer(segmentation$segend)),
+                        ranges = IRanges(start =
+                                           as.integer(segmentation$segstart),
+                                         end =
+                                           as.integer(segmentation$segend)),
                         mark = as.character(segmentation$state))
   if (is.null(rnafile)) {
     #Intersect ChIA-PET data with Epigenetic Segmentation Data
@@ -217,19 +223,23 @@ overlap <- function(hicfile,
     epineargene <- left_join(epineargene, RNAseq, by = c("ensembl" = "gene_id"))
     segmentation <- cbind(segmentation, epineargene)
 
-    HiCneargene1 <- data.frame(nearest(chiaregion1, ensGene, ignore.strand=TRUE))
+    HiCneargene1 <- data.frame(nearest(chiaregion1, ensGene,
+                                       ignore.strand=TRUE))
     colnames(HiCneargene1) <- "ensembl"
     HiCneargene1 <- data.frame(gene[HiCneargene1$ensembl, "ensembl_gene_id"])
     colnames(HiCneargene1) <- "ensembl"
     HiCneargene1$ensembl <- as.character(HiCneargene1$ensembl)
-    HiCneargene1 <- left_join(HiCneargene1, RNAseq, by = c("ensembl" = "gene_id"))
+    HiCneargene1 <- left_join(HiCneargene1, RNAseq,
+                              by = c("ensembl" = "gene_id"))
 
-    HiCneargene2 <- data.frame(nearest(chiaregion2, ensGene, ignore.strand=TRUE))
+    HiCneargene2 <- data.frame(nearest(chiaregion2, ensGene,
+                                       ignore.strand=TRUE))
     colnames(HiCneargene2) <- "ensembl"
     HiCneargene2 <- data.frame(gene[HiCneargene2$ensembl, "ensembl_gene_id"])
     colnames(HiCneargene2) <- "ensembl"
     HiCneargene2$ensembl <- as.character(HiCneargene2$ensembl)
-    HiCneargene2 <- left_join(HiCneargene2, RNAseq, by = c("ensembl" = "gene_id"))
+    HiCneargene2 <- left_join(HiCneargene2, RNAseq,
+                              by = c("ensembl" = "gene_id"))
 
   #Intersect ChIA-PET data with Epigenetic Segmentation Data
 

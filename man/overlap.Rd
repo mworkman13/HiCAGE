@@ -2,7 +2,8 @@
 % Please edit documentation in R/overlap.R
 \name{overlap}
 \alias{overlap}
-\title{Combine chromosome conformation capture data with segmentation and RNA data}
+\title{Combine chromosome conformation capture data with
+segmentation and RNA data}
 \usage{
 overlap(hicfile, segmentfile, rnafile, mart = "ensembl",
   martset = "hsapiens_gene_ensembl", gbuild = 37, hic.columns = c(1:6, 8),
@@ -38,11 +39,13 @@ annotated with a prioritized segmentation mark, the nearest gene to the
 segmentation mark and the gene's FPKM expression data
 }
 \description{
-Combine chromosome conformation capture data with segmentation and RNA data
+Combine chromosome conformation capture data with
+segmentation and RNA data
 }
 \examples{
 hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
-segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
+segment_chr20 <- system.file("extdata", "segment_chr20.bed",
+    package = "HiCAGE")
 rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
 example <- overlap(hicfile = hic_chr20,
                    segmentfile = segment_chr20,

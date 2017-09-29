@@ -6,6 +6,10 @@
 \usage{
 hicageshiny()
 }
+\value{
+When run, function will launch the HiCAGE Shiny application - a GUI
+for user-friendly implementation of HiCAGE
+}
 \description{
 Launch HiCAGE Shiny application
 }

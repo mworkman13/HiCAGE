@@ -4,9 +4,11 @@
 #' @param plot.subset Allows for plotting interactions with Hi-C scores only
 #' @param display.legend Adds legend to circos plot
 #' @param hic.legend Title for Hi-C legend
-#' @param hic.range A vector representing the low and high values for the legend of Hi-C values
+#' @param hic.range A vector representing the low and high values for the legend
+#'     of Hi-C values
 #' @param rna.legend Title for RNA legend
-#' @param rna.range A vector representing the low and high values for the legend of RNA values
+#' @param rna.range A vector representing the low and high values for the legend
+#'     of RNA values
 #' @param circos.color Passes colors to chord diagram for each group
 #' @param ... Addtional arguments passed to chordDiagram function
 #' @importFrom circlize chordDiagram circos.clear circos.rect
@@ -18,11 +20,18 @@
 #' @import graphics
 #' @import grDevices
 #' @export
+#' @return Generates a chord diagram containing circluar tracks with an inner
+#' track displaying  average Hi-C interaction score and an inner track with
+#' displaying average RNA-seq log(FPKM) values for each segment in the plot
 #' @examples
+#' hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
+#' segment_chr20 <- system.file("extdata", "segment_chr20.bed",
+#'     package = "HiCAGE")
+#' rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
 #' overlap(hicfile = hic_chr20,
-#' segmentfile = segment_chr20,
-#' rnafile = rna_chr20
-#' rna.columns = c(1, 7))
+#'         segmentfile = segment_chr20,
+#'         rnafile = rna_chr20,
+#'         rna.columns = c(1, 7))
 
 circleplot <- function(datatable,
                        plot.subset = FALSE,
