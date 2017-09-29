@@ -11,6 +11,7 @@
 #' circos.text
 #' @importFrom dplyr left_join
 #' @importFrom stats setNames aggregate
+#' @importFrom plotrix color.gradient color.legend
 #' @import graphics
 #' @import grDevices
 #' @export
@@ -18,9 +19,9 @@
 circleplot <- function(datatable,
                        plot.subset = FALSE,
                        display.legend = TRUE,
-                       hic.legend = "Hi-C Score",
+                       hic.legend = "Avg. Hi-C Score",
                        hic.range = c(0, 130),
-                       rna.legend = "logFPKM",
+                       rna.legend = "Avg. log(FPKM)",
                        rna.range = c(0, 3.2),
                        circos.color = NULL,
                        ...) {
@@ -213,31 +214,48 @@ circleplot <- function(datatable,
                          })
   }
 
-  if (display.legend == TRUE & plot.subset == FALSE) {
-  legend("bottomleft", title = rna.legend,
-         legend = c(min(rna.range),
+  hiccolor <- color.gradient(c(1,1), c(1,0), c(1,0), nslices = 200)
+  rnacolor <- color.gradient(c(1,0), c(1,0), c(1,0), nslices = 200)
+  rna.labels <- c(c(min(rna.range),
                     (min(rna.range)+max(rna.range))/2,
-                    max(rna.range)),
-         fill=colorRampPalette(c("white", "black"))(3))
-  legend("bottomright", title = hic.legend,
-         legend = c(min(hic.range),
-                    (min(hic.range)+max(hic.range))/2,
-                    max(hic.range)),
-         fill=colorRampPalette(c("white", "red"))(3))
+                    max(rna.range)))
+  hic.labels <- c(min(hic.range),
+                  (min(hic.range)+max(hic.range))/2,
+                  max(hic.range))
+
+  if (display.legend == TRUE & plot.subset == FALSE) {
+    color.legend(xl = -0.98,
+                 yb = -1.0,
+                 xr = -0.50,
+                 yt = -0.91,
+                 legend = rna.labels,
+                 rect.col= rnacolor)
+    color.legend(xl = 0.50,
+                 yb = -1.0,
+                 xr = 0.98,
+                 yt = -0.91,
+                 legend = hic.labels,
+                 rect.col= hiccolor)
+    text(-0.74, -1.045, labels = rna.legend)
+    text(0.74, -1.045, labels = hic.legend)
   }
   if (display.legend == "RNA") {
-    legend("bottomleft", title = rna.legend,
-           legend = c(min(rna.range),
-                      (min(rna.range)+max(rna.range))/2,
-                      max(rna.range)),
-           fill=colorRampPalette(c("white", "black"))(3))
+    color.legend(xl = -0.98,
+                 yb = -1.0,
+                 xr = -0.50,
+                 yt = -0.91,
+                 legend = rna.labels,
+                 rect.col= rnacolor)
+    text(-0.74, -1.045, labels = rna.legend)
   }
   if (display.legend == "HIC" | plot.subset == "hicscore") {
-    legend("bottomright", title = hic.legend,
-           legend = c(min(hic.range),
-                      (min(hic.range)+max(hic.range))/2,
-                      max(hic.range)),
-           fill=colorRampPalette(c("white", "red"))(3))
+    color.legend(xl = 0.50,
+                 yb = -1.0,
+                 xr = 0.98,
+                 yt = -0.91,
+                 legend = hic.labels,
+                 rect.col= hiccolor)
+    text(0.74, -1.045, labels = hic.legend)
   }
 
 }
