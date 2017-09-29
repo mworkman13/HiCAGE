@@ -1,7 +1,8 @@
+#' @import shiny
+#' @importFrom readr read_tsv
+#' @export
 hicageshiny <- function() {
-  require(shiny)
-  require(HiCAGE)
-  require(readr)
+  options(shiny.maxRequestSize=100*1024^2)
   shinyApp(
     ui = shinyUI(pageWithSidebar(
       headerPanel(list(em("HiCAGE:"), "Hi-C Annotation and Graphing Ensemble")),

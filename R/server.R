@@ -1,4 +1,4 @@
-options(shiny.maxRequestSize=100*1024^2)
+#' @import shiny
 shinyServer(function(input, output, session) {
   #Load Hi-C data file
   output$contents <- renderDataTable({

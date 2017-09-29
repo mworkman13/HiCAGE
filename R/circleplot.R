@@ -10,6 +10,9 @@
 #' circos.trackPlotRegion colorRamp2 circos.par get.cell.meta.data
 #' circos.text
 #' @importFrom dplyr left_join
+#' @importFrom stats setNames aggregate
+#' @import graphics
+#' @import grDevices
 #' @export
 
 circleplot <- function(datatable,

@@ -38,7 +38,10 @@ segmentation mark and the gene's FPKM expression data
 Combine chromosome conformation capture data with segmentation and RNA data
 }
 \examples{
-overlap("hic_chr20.txt", "segment_chr20.bed", "rna_chr20.tsv")
-example <- overlap(hicfile = "data/hic_chr20.txt", segmentfile = "data/segment_chr20.bed", rnafile = "data/rna_chr20.tsv")
-example <- overlap(hicfile = "data/hic.txt", segmentfile = "data/segment.bed", rnafile = "data/rna.tsv")
+hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
+segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
+rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
+example <- overlap(hicfile = hic_chr20,
+                   segmentfile = segment_chr20,
+                   rnafile = rna_chr20)
 }

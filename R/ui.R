@@ -1,7 +1,7 @@
-library(shiny)
-library(HiCAGE)
-library(tidyverse)
-
+# library(shiny)
+# library(HiCAGE)
+# library(tidyverse)
+#' @import shiny
 shinyUI(pageWithSidebar(
   headerPanel(list(em("HiCAGE:"), "Hi-C Annotation and Graphing Ensemble")),
   sidebarPanel(

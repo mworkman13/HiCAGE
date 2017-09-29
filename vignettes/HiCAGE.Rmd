@@ -25,10 +25,8 @@ and visualization of interacting chromatin regions.
 ## HiCAGE Environment Setup
 `HiCAGE` requires the following packages to be installed:
 ```{r message = FALSE, warning = FALSE}
-library(tidyverse)
 library(GenomicRanges)
 library(circlize)
-library(ggplot2)
 library(biomaRt)
 library(HiCAGE)
 ```
@@ -50,16 +48,20 @@ or processed [tsv format](https://www.encodeproject.org/experiments/ENCSR000AEM/
 # Code
 Example format for initial data input:
 ```{r message = FALSE}
-example <- overlap(hicfile = "../data/hic_chr20.txt", 
-                   segmentfile = "../data/segment_chr20.bed", 
-                   rnafile = "../data/rna_chr20.tsv")
+hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
+segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
+rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
+
+example <- overlap(hicfile = hic_chr20, 
+                   segmentfile = segment_chr20, 
+                   rnafile = rna_chr20)
 ```
 
 ## Column Selection *(Optional based on data format)*
 ### Hi-C or 3C-based Data Column Selection
 Example Hi-C data file:
 ```{r echo = FALSE, tidy = TRUE}
-head(read.table(file = "../data/hic_chr20.txt", comment.char = "#", skip = 1))
+head(read.table(file = hic_chr20, comment.char = "#", skip = 1))
 ```
 
 Hi-C data files need to contain the columns in the following example:
@@ -74,16 +76,16 @@ The default `overlap` function selects these columns automatically. If columns a
 not is this order, user can use `hic.columns` to select the proper columns:
 
 ```{r eval = FALSE}
-overlap(hicfile = "../data/hic_chr20.txt", 
-        segmentfile = "../data/segment_chr20.bed", 
-        rnafile = "../data/rna_chr20.tsv",
+overlap(hicfile = hic_chr20, 
+        segmentfile = segment_chr20, 
+        rnafile = rna_chr20,
         hic.columns = c(1:6, 8))
 ```
 
 ### Segmentation File Column Selection
 Example *StateHub/StatePaintR* segmentation data file:
 ```{r echo = FALSE, tidy = TRUE}
-head(read.table(file = "../data/segment_chr20.bed", comment.char = "#", skip = 1))
+head(read.table(file = segment_chr20, comment.char = "#", skip = 1))
 ```
 
 Segmentation data files need to contain the columns in the following example:
@@ -99,16 +101,16 @@ users can still select columns containing the necessary information using
 `segment.column` in the `overlap` function:
 
 ```{r eval = FALSE}
-overlap(hicfile = "../data/hic_chr20.txt", 
-        segmentfile = "../data/segment_chr20.bed", 
-        rnafile = "../data/rna_chr20.tsv",
+overlap(hicfile = hic_chr20, 
+        segmentfile = segment_chr20, 
+        rnafile = rna_chr20,
         segment.columns = c(1:5))
 ```
 
 ### RNA-seq Data File Column Selection
 Example RNA-seq data file:
 ```{r echo = FALSE, tidy = TRUE}
-head(read.table(file = "../data/rna_chr20.tsv", comment.char = "#", skip = 1))
+head(read.table(file = rna_chr20, comment.char = "#", skip = 1))
 ```
 
 RNA-seq data files need to contain only Ensembl gene ID and gene expression 
@@ -125,9 +127,9 @@ User can select columns in the RNA-seq data file using `rna.column` in the
 `overlap` function:
 
 ```{r eval = FALSE}
-overlap(hicfile = "../data/data/hic_chr20.txt", 
-        segmentfile = "../data/data/segment_chr20.bed", 
-        rnafile = "../data/rna_chr20.tsv",
+overlap(hicfile = hic_chr20, 
+        segmentfile = segment_chr20, 
+        rnafile = rna_chr20
         rna.columns = c(1, 7))
 ```
 
@@ -147,7 +149,7 @@ overlap <- function(hicfile,
                     rnafile,
                     mart = "ensembl",
                     martset = "hsapiens_gene_ensembl",
-                    gbuild = 37
+                    gbuild = 37)
 ```
 
 ###Sample of currently available datasets in the "ensembl" Mart:

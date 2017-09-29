@@ -13,6 +13,7 @@
 #' @importFrom readr read_tsv read_csv
 #' @importFrom dplyr left_join bind_rows
 #' @importFrom biomaRt useEnsembl getBM
+#' @import utils
 #' @export
 #' @return Returns a gene list sorted by gene expression levels of all genes
 #' near the proximal mark that are interacting with the distal mark
