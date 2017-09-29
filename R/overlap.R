@@ -4,8 +4,6 @@
 #' @param segmentfile The segmentation datafile from StateHub
 #' @param rnafile The RNA gene expression datafile containing Ensembl IDs and
 #' FPKM or TPM normalized expression values
-#' @param manualselect If TRUE, allows for manual selection of chromosome
-#' conformation capture columns to be used for analysis
 #' @param mart BiomaRt used for pulling gene name and location data
 #' @param martset The specific mart or dataset used for genome information
 #' @param gbuild The genome version of mart to be used
