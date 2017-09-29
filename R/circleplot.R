@@ -4,6 +4,7 @@
 #' @param plot.subset Allows for plotting interactions with Hi-C scores only
 #' @param display.legend Adds legend to circos plot
 #' @param rna.legend Title for RNA legend
+#' @param rna.range A vector representing the low and high values for the legend of RNA values
 #' @param hic.legend Title for Hi-C legend
 #' @param circos.color Passes colors to chord diagram for each group
 #' @importFrom circlize chordDiagram circos.clear circos.rect
