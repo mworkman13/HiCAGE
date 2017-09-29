@@ -22,9 +22,15 @@ FPKM or TPM normalized expression values}
 
 \item{gbuild}{The genome version of mart to be used}
 
-\item{hic.columns}{Columns from the chromsome conformation capture data
-that contains, in order, 'left chromosome', 'left start', 'left end', 'right
+\item{hic.columns}{Columns from the chromsome conformation capture data file
+that contain, in order, 'left chromosome', 'left start', 'left end', 'right
 chromosome', 'right start', 'right end', 'interaction score'}
+
+\item{segment.columns}{Columns from the segmentation data file that contain,
+in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'}
+
+\item{rna.columns}{Columns from the RNA-seq data file that contain, in order,
+'GeneID', 'FPKM'}
 
 \item{manualselect}{If TRUE, allows for manual selection of chromosome
 conformation capture columns to be used for analysis}

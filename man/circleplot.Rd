@@ -18,11 +18,15 @@ circleplot(datatable, plot.subset = FALSE, display.legend = TRUE,
 
 \item{hic.legend}{Title for Hi-C legend}
 
+\item{hic.range}{A vector representing the low and high values for the legend of Hi-C values}
+
 \item{rna.legend}{Title for RNA legend}
 
 \item{rna.range}{A vector representing the low and high values for the legend of RNA values}
 
 \item{circos.color}{Passes colors to chord diagram for each group}
+
+\item{...}{Addtional arguments passed to chordDiagram function}
 }
 \description{
 Generate circos plots from overlap data output

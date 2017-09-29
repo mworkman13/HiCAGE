@@ -9,9 +9,13 @@
 #' @param mart BiomaRt used for pulling gene name and location data
 #' @param martset The specific mart or dataset used for genome information
 #' @param gbuild The genome version of mart to be used
-#' @param hic.columns Columns from the chromsome conformation capture data
-#' that contains, in order, 'left chromosome', 'left start', 'left end', 'right
+#' @param hic.columns Columns from the chromsome conformation capture data file
+#' that contain, in order, 'left chromosome', 'left start', 'left end', 'right
 #' chromosome', 'right start', 'right end', 'interaction score'
+#' @param segment.columns Columns from the segmentation data file that contain,
+#' in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'
+#' @param rna.columns Columns from the RNA-seq data file that contain, in order,
+#' 'GeneID', 'FPKM'
 #' @importFrom readr read_tsv read_csv
 #' @importFrom tidyr separate
 #' @importFrom dplyr mutate left_join full_join group_by bind_rows bind_cols
