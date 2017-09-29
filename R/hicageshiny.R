@@ -1,3 +1,5 @@
+#' Launch HiCAGE Shiny application
+#'
 #' @import shiny
 #' @importFrom readr read_tsv
 #' @export
