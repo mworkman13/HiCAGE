@@ -31,9 +31,6 @@ in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'}
 
 \item{rna.columns}{Columns from the RNA-seq data file that contain, in order,
 'GeneID', 'FPKM'}
-
-\item{manualselect}{If TRUE, allows for manual selection of chromosome
-conformation capture columns to be used for analysis}
 }
 \value{
 Returns a GRanges with each chromsome conformation capture segment
