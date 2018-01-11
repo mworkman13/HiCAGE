@@ -218,6 +218,6 @@ gogenelist(datafile = example,
 # Figures
 
 ```{r fig.height = 6, fig.width = 6, fig.align = "center", fig.cap = "Figure output from HiCAGE circleplot function"}
-circleplot(datatable = example, display.legend = FALSE)
+circleplot(datatable = example, display.legend = TRUE)
 ```
 

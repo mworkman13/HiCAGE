@@ -27,7 +27,8 @@ Imports: readr,
         graphics, 
         utils, 
         stats,
-        plotrix
+        plotrix,
+        UpSetR
 License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true

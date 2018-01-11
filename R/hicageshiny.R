@@ -66,12 +66,24 @@ hicageshiny <- function() {
                                                value = c(0, 5))),
                                       column(4,
                                              actionButton("reload", "Reload"))),
-                             downloadButton('downloadPlot', 'Download')),
+                             downloadButton('downloadCircos', 'Download')),
+                    tabPanel("UpSetR Plot",
+                             plotOutput('upsetplot'),
+                             fluidRow(column(3,
+                                             numericInput("numwidth",
+                                                          label = h6("Download Width (inches)"),
+                                                          value = 1)),
+                                      (column(4,
+                                              numericInput("numheight",
+                                                           label = h6("Download Height (inches)"),
+                                                           value = 1)))),
+                             downloadButton(column(4,'downloadUpset', 'Download'))),
                     tabPanel("Gene List",
                              fluidRow(column(3, uiOutput("Box1")),
                                       column(4, uiOutput("Box2"))),
                              dataTableOutput('genelist'),
                              downloadButton('downloadGene', 'Download'))
+
         )
       )
       )),
@@ -198,7 +210,7 @@ hicageshiny <- function() {
                      rna.range = c(input$rnascale))
         })
         ##Prepare Circos Plot for Download
-        output$downloadPlot <- downloadHandler(
+        output$downloadCircos <- downloadHandler(
           filename = function() {
             paste("plot-", Sys.time(), '.png', sep='')},
           content = function(file) {
@@ -215,6 +227,27 @@ hicageshiny <- function() {
                        rna.range = c(input$rnascale))
             dev.off()},
           contentType = 'image/png')
+
+        #Generate UpSetR Plot
+        output$upsetplot <- renderPlot({
+          plotup(get.overlaps())
+        })
+        ##Prepare UpSetR plot for download
+        output$downloadUpset <- downloadHandler(
+          filename = function() {
+            paste("plot-", Sys.time(), '.png', sep='')},
+          content = function(file) {
+            png(file,
+                width = input$numwidth,
+                height = input$numheight,
+                units = "in",
+                pointsize = 20,
+                bg = "white",
+                res = 300)
+            plotup(get.overlaps())
+            dev.off()},
+          contentType = 'image/png')
+
 
         #Go Gene List
         output$Box1 = renderUI(
