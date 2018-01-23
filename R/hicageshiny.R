@@ -203,11 +203,15 @@ hicageshiny <- function() {
         else {
           plotsub <- FALSE
         }
+
         output$circosplot <- renderPlot({
+          input$reload
+          isolate({
           circleplot(get.overlaps(),
                      plot.subset = plotsub,
                      hic.range = c(input$hicscale),
                      rna.range = c(input$rnascale))
+        })
         })
         ##Prepare Circos Plot for Download
         output$downloadCircos <- downloadHandler(
