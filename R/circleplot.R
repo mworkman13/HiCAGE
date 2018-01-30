@@ -234,10 +234,8 @@ circleplot <- function(datatable,
   hiccolor <- color.gradient(c(1,1), c(1,0), c(1,0), nslices = 200)
   rnacolor <- color.gradient(c(1,0), c(1,0), c(1,0), nslices = 200)
   rna.labels <- c(c(min(rna.range),
-                    (min(rna.range)+max(rna.range))/2,
                     max(rna.range)))
   hic.labels <- c(min(hic.range),
-                  (min(hic.range)+max(hic.range))/2,
                   max(hic.range))
 
   if (display.legend == TRUE & plot.subset == FALSE) {

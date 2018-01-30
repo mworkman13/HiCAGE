@@ -5,9 +5,10 @@
 \title{Combine chromosome conformation capture data with
 segmentation and RNA data}
 \usage{
-overlap(hicfile, segmentfile, rnafile, mart = "ensembl",
-  martset = "hsapiens_gene_ensembl", gbuild = 37, hic.columns = c(1:6, 8),
-  segment.columns = c(1:5), rna.columns = c(1, 7))
+overlap(hicfile, segmentfile, rnafile, bio_mart = "ensembl",
+  martset = "hsapiens_gene_ensembl", webhost = "www.ensembl.org",
+  hic.columns = c(1:6, 8), segment.columns = c(1:5), rna.columns = c(1,
+  7))
 }
 \arguments{
 \item{hicfile}{The chromosome conformation capture datafile}
@@ -17,11 +18,11 @@ overlap(hicfile, segmentfile, rnafile, mart = "ensembl",
 \item{rnafile}{The RNA gene expression datafile containing Ensembl IDs and
 FPKM or TPM normalized expression values}
 
-\item{mart}{BiomaRt used for pulling gene name and location data}
+\item{bio_mart}{BiomaRt used for pulling gene name and location data}
 
 \item{martset}{The specific mart or dataset used for genome information}
 
-\item{gbuild}{The genome version of mart to be used}
+\item{webhost}{Website host to connect to for downloading biomaRt data}
 
 \item{hic.columns}{Columns from the chromsome conformation capture data file
 that contain, in order, 'left chromosome', 'left start', 'left end', 'right

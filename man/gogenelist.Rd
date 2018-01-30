@@ -5,7 +5,9 @@
 \title{Generates gene list for selected chromatin interactions}
 \usage{
 gogenelist(datafile, proximalmark, distalmark, gene.symbol = FALSE,
-  mart = "ensembl", martset = "hsapiens_gene_ensembl", gbuild = 37)
+  species = "human", bio_mart = "ensembl",
+  martset = "hsapiens_gene_ensembl", webhost = "www.ensembl.org",
+  geneOnto = TRUE, expression_cutoff = 0)
 }
 \arguments{
 \item{datafile}{The GRanges object output from the overlap function}
@@ -19,11 +21,15 @@ with the proximalmark}
 \item{gene.symbol}{If TRUE, will ouput gene list using official gene symbol.
 If FALSE, gene list output will use Ensembl ID}
 
-\item{mart}{BiomaRt used for pulling official gene name}
+\item{bio_mart}{BiomaRt used for pulling official gene name}
 
 \item{martset}{The specific mart or dataset used for gene information}
 
+\item{geneOnto}{Run gene ontology enrichment using TopGO}
+
 \item{gbuild}{The genome version of mart to be used}
+
+\item{expresscut}{Cutoff for expression value in gene list}
 }
 \value{
 Returns a gene list sorted by gene expression levels of all genes

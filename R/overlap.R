@@ -5,9 +5,9 @@
 #' @param segmentfile The segmentation datafile from StateHub
 #' @param rnafile The RNA gene expression datafile containing Ensembl IDs and
 #' FPKM or TPM normalized expression values
-#' @param mart BiomaRt used for pulling gene name and location data
+#' @param bio_mart BiomaRt used for pulling gene name and location data
 #' @param martset The specific mart or dataset used for genome information
-#' @param gbuild The genome version of mart to be used
+#' @param webhost Website host to connect to for downloading biomaRt data
 #' @param hic.columns Columns from the chromsome conformation capture data file
 #' that contain, in order, 'left chromosome', 'left start', 'left end', 'right
 #' chromosome', 'right start', 'right end', 'interaction score'
@@ -21,7 +21,7 @@
 #' anti_join filter
 #' @importFrom GenomicRanges GRanges nearest findOverlaps
 #' @importFrom IRanges IRanges
-#' @importFrom biomaRt useEnsembl getBM
+#' @importFrom biomaRt useEnsembl getBM useMart
 #' @importFrom magrittr %>%
 #' @export
 #' @return Returns a GRanges with each chromsome conformation capture segment
@@ -38,16 +38,21 @@
 overlap <- function(hicfile,
                     segmentfile,
                     rnafile,
-                    mart = "ensembl",
+                    bio_mart = "ensembl",
                     martset = "hsapiens_gene_ensembl",
-                    gbuild = 37,
+                    webhost = "www.ensembl.org",
                     hic.columns = c(1:6,8),
                     segment.columns = c(1:5),
                     rna.columns = c(1,7)) {
+  #Progress Bar
+  pb   <- txtProgressBar(1, 100,
+                         initial = 6,
+                         style=3)
   # Load biomart for assigning nearest gene and subset in GRanges
-  ensembl = useEnsembl(biomart = mart,
-                       dataset = martset,
-                       GRCh = gbuild)
+  ensembl = useMart(biomart = bio_mart,
+                    dataset = martset,
+                    host = webhost)
+  setTxtProgressBar(pb, 31)
   gene <- getBM(attributes = c('ensembl_gene_id',
                                'chromosome_name',
                                'start_position',
@@ -58,6 +63,7 @@ overlap <- function(hicfile,
   ensGene <- GRanges(seqnames = gene$chromosome_name,
                      ranges = IRanges(start = as.integer(gene$start_position),
                                       end = as.integer(gene$end_position)))
+  setTxtProgressBar(pb, 61)
   # Manual select allows user to manual choose columns from Hi-C datafile
     HiCdata <- read_tsv(file = hicfile,
                         col_names = FALSE,
@@ -212,6 +218,7 @@ overlap <- function(hicfile,
     RNAseq <- subset(RNAseq, select = rna.columns)
     colnames(RNAseq) <- c("gene_id",
                           "FPKM")
+    setTxtProgressBar(pb, 76)
 
 
     #Find nearest gene to each segmentation and Hi-C location; Add FPKM
@@ -231,6 +238,7 @@ overlap <- function(hicfile,
     HiCneargene1$ensembl <- as.character(HiCneargene1$ensembl)
     HiCneargene1 <- left_join(HiCneargene1, RNAseq,
                               by = c("ensembl" = "gene_id"))
+    setTxtProgressBar(pb, 86)
 
     HiCneargene2 <- data.frame(nearest(chiaregion2, ensGene,
                                        ignore.strand=TRUE))
@@ -412,6 +420,7 @@ overlap <- function(hicfile,
   final$mark2[final$mark2=="PPRC"] <- "PPR"
 
   finaltable <- (table(final$mark1, final$mark2))
+  setTxtProgressBar(pb, 100)
 
   final
 }
