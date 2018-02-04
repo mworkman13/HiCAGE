@@ -1,5 +1,5 @@
 ---
-title: "HiCAGE: Hi-C Annotation and Graphing Ensemble"
+title: "HiCAGE: Hi-C Annotation and Graphics Ensemble"
 author: "Michael J. Workman and Dennis J. Hazelett"
 date: "`r Sys.Date()`"
 output: 
@@ -29,6 +29,7 @@ library(GenomicRanges)
 library(circlize)
 library(biomaRt)
 library(HiCAGE)
+library(topGO)
 ```
 
 ## Input Data
@@ -49,14 +50,17 @@ or processed [tsv format](https://www.encodeproject.org/experiments/ENCSR000AEM/
 
 # Code
 Example format for initial data input:
-```{r message = FALSE}
+```{r message = FALSE, results= 'hide'}
 hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
 segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
 rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
 
 example <- overlap(hicfile = hic_chr20, 
                    segmentfile = segment_chr20, 
-                   rnafile = rna_chr20)
+                   rnafile = rna_chr20,
+                   bio_mart = "ensembl",
+                   martset = "hsapiens_gene_ensembl",
+                   webhost = "http://Feb2014.archive.ensembl.org")
 ```
 
 ## Column Selection *(Optional based on data format)*
@@ -138,8 +142,7 @@ overlap(hicfile = hic_chr20,
 ## biomaRt Selection
 `HiCAGE` enables users to select various biomaRts using the `biomaRt` package,
 allowing for flexibility in species and genome build for annotating 
-genomic regions. Default genome selection is `"hsapiens_gene_ensembl"` genome 
-build 37. Currently, only genome build 37 and 38 are available. Genome 
+genomic regions. Default genome selection is `"hsapiens_gene_ensembl"`. Genome 
 selection must match the genome used to compile the 3C-based data file. 
 
 The biomaRt can be specified in the `overlap` function and will be passed
@@ -149,12 +152,12 @@ on to the `biomaRt` package
 overlap <- function(hicfile,
                     segmentfile,
                     rnafile,
-                    mart = "ensembl",
+                    bio_mart = "ensembl",
                     martset = "hsapiens_gene_ensembl",
-                    gbuild = 37)
+                    webhost = "www.ensembl.org")
 ```
 
-###Sample of currently available datasets in the "ensembl" Mart:
+###Sample of available datasets in the "ensembl" Mart:
 
 dataset	                  |	description	                   |	version
 ---------	                |	---------	                     |	--------
@@ -190,7 +193,18 @@ mspreteij_gene_ensembl	|	Mouse SPRETEiJ genes 	 | SPRET_EiJ_v1
 mdba2j_gene_ensembl	    |	Mouse DBA2J genes      | DBA_2J_v1
 maj_gene_ensembl	      |	Mouse AJ genes         | A_J_v1
 
+###Currently available datasets in the "ENSEMBL_MART_MOUSE" Mart:
+```{r}
+ensembl <- useMart("ENSEMBL_MART_MOUSE")
+listDatasets(ensembl)
 
+```
+
+###Available archived versions of Ensembl
+
+```{r}
+listEnsemblArchives()
+```
 
 # Data Output
 ## `overlap` Data Output
@@ -211,7 +225,14 @@ associated with the proximalmark.
 ```{r}
 gogenelist(datafile = example,
            proximalmark = "PAR",
-           distalmark = "EAR")
+           distalmark = "EAR",
+           gene.symbol = FALSE,
+           species = "human",
+           bio_mart = "ensembl",
+           martset = "hsapiens_gene_ensembl",
+           webhost = "http://Feb2014.archive.ensembl.org",
+           geneOnto = FALSE,
+           expression_cutoff = 0)
 ```
 
 

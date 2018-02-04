@@ -66,9 +66,7 @@ overlap <- function(hicfile,
   setTxtProgressBar(pb, 61)
   # Manual select allows user to manual choose columns from Hi-C datafile
     HiCdata <- read_tsv(file = hicfile,
-                        col_names = FALSE,
                         comment = "#",
-                        skip = 1,
                         guess_max = 100000)
     HiCdata <- subset(HiCdata, select = hic.columns)
     colnames(HiCdata) <- c("region1chrom",
@@ -103,9 +101,7 @@ overlap <- function(hicfile,
   #Segmentation files from StateHub Default Model
   #http://statehub.org/modeltracks/default_model/
   segmentation <- read_tsv(file = segmentfile,
-                           col_names = FALSE,
                            comment = "#",
-                           skip = 1,
                            guess_max = 100000)
   segmentation <- subset(segmentation, select = segment.columns)
   colnames(segmentation) <- c("chromosome",
@@ -210,12 +206,11 @@ overlap <- function(hicfile,
   else{
     #Parse RNA seq file
     RNAseq <- read_tsv(rnafile,
-                       col_names = FALSE,
                        comment = "#",
-                       skip = 1,
                        guess_max = 100000) %>%
-      separate("X1", into = c("gene_id", "extraint"), sep = "\\.")
-    RNAseq <- subset(RNAseq, select = rna.columns)
+      subset(select = rna.columns) %>%
+      separate(col = 1, into = c("gene_id", "extraint"), sep = "\\.") %>%
+      subset(select = -extraint)
     colnames(RNAseq) <- c("gene_id",
                           "FPKM")
     setTxtProgressBar(pb, 76)
@@ -419,8 +414,7 @@ overlap <- function(hicfile,
   final$mark2[final$mark2=="PPR"] <- "PPR"
   final$mark2[final$mark2=="PPRC"] <- "PPR"
 
-  finaltable <- (table(final$mark1, final$mark2))
+  final <- final[,-1]
   setTxtProgressBar(pb, 100)
-
   final
 }

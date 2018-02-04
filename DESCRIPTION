@@ -1,6 +1,6 @@
 Package: HiCAGE
 Type: Package
-Title: Hi-C Annotation and Graphing Ensemble
+Title: Hi-C Annotation and Graphics Ensemble
 Version: 0.1.0
 Authors@R: person("Michael", "Workman", email = "michael.workman@cshs.org",
     role = c("aut", "cre"))

@@ -43,8 +43,9 @@ hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
 segment_chr20 <- system.file("extdata", "segment_chr20.bed",
     package = "HiCAGE")
 rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
-overlap(hicfile = hic_chr20,
-        segmentfile = segment_chr20,
-        rnafile = rna_chr20,
-        rna.columns = c(1, 7))
+example <- overlap(hicfile = hic_chr20,
+         segmentfile = segment_chr20,
+         rnafile = rna_chr20,
+         rna.columns = c(1, 7))
+circleplot(example)
 }

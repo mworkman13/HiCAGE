@@ -9,7 +9,7 @@ hicageshiny <- function() {
   options(shiny.maxRequestSize=100*1024^2)
   shinyApp(
     ui = shinyUI(pageWithSidebar(
-      headerPanel(list(em("HiCAGE:"), "Hi-C Annotation and Graphing Ensemble")),
+      headerPanel(list(em("HiCAGE:"), "Hi-C Annotation and Graphics Ensemble")),
       sidebarPanel(
         helpText(h4(list(em("Step 1"), "- Select Genome and Build:"))),
         selectInput("genomes", label = NULL,
