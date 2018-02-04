@@ -67,7 +67,6 @@ overlap <- function(hicfile,
   # Manual select allows user to manual choose columns from Hi-C datafile
     HiCdata <- read_tsv(file = hicfile,
                         comment = "#",
-                        skip = 1,
                         guess_max = 100000)
     HiCdata <- subset(HiCdata, select = hic.columns)
     colnames(HiCdata) <- c("region1chrom",
@@ -103,6 +102,7 @@ overlap <- function(hicfile,
   #http://statehub.org/modeltracks/default_model/
   segmentation <- read_tsv(file = segmentfile,
                            comment = "#",
+                           skip = 1,
                            guess_max = 100000)
   segmentation <- subset(segmentation, select = segment.columns)
   colnames(segmentation) <- c("chromosome",
