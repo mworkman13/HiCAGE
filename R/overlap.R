@@ -101,6 +101,7 @@ overlap <- function(hicfile,
   #Segmentation files from StateHub Default Model
   #http://statehub.org/modeltracks/default_model/
   segmentation <- read_tsv(file = segmentfile,
+                           col_names = FALSE,
                            comment = "#",
                            skip = 1,
                            guess_max = 100000)
