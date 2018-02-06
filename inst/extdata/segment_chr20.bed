@@ -1,5 +1,20 @@
+# this file was produced by StatePaintR								
+# version number: 0.3								
+# StateHub Model ID: 581ff9f246e0fb06b4b6b178								
+# it is the chromatin segmentation of the following files: 								
+# K562 H3K36me3 /Volumes/Oberon/ENCODE/ENCFF676RWX.narrowPeak								
+# K562 H3K9ac /Volumes/Oberon/ENCODE/ENCFF085JHT.narrowPeak								
+# K562 H3K27me3 /Volumes/Oberon/ENCODE/ENCFF322IFF.narrowPeak								
+# K562 H3K9ac /Volumes/Oberon/ENCODE/ENCFF173ULG.narrowPeak								
+# K562 H3K4me3 /Volumes/Oberon/ENCODE/ENCFF127XXD.narrowPeak								
+# K562 H3K27me3 /Volumes/Oberon/ENCODE/ENCFF126QYP.narrowPeak								
+# K562 H3K36me3 /Volumes/Oberon/ENCODE/ENCFF498CMP.narrowPeak								
+# K562 H3K9me3 /Volumes/Oberon/ENCODE/ENCFF894VEM.narrowPeak								
+# K562 H3K4me3 /Volumes/Oberon/ENCODE/ENCFF737AMS.narrowPeak								
+# K562 H3K4me3 /Volumes/Oberon/ENCODE/ENCFF883POK.narrowPeak								
+# K562 H3K4me1 /Volumes/Oberon/ENCODE/ENCFF255CMO.narrowPeak								
+# K562 H3K4me1 /Volumes/Oberon/ENCODE/ENCFF730VTO.narrowPeak								
 "track name=K562 description=""StatePaintR Segmentation for K562"" itemRgb=on db=hg19"								
-X1	X2	X3	X4	X5	X6	X7	X8	X9
 chr20	62218	62675	EWR	0	.	62218	62675	"255,231,144"
 chr20	117995	118433	HET	781.147557	.	117995	118433	"138,145,208"
 chr20	118495	118645	RPS	946.486803	.	118495	118645	"255,255,153"
