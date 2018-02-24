@@ -66,7 +66,7 @@ circleplot <- function(datatable,
              track.margin = c(0, 0))
 
   chordDiagram(circosR,
-               circos.par(track.margin = c(0, 0)),
+               circos.par(track.margin = c(0.005, 0.005)),
                grid.col = circos.color,
                annotationTrack = "grid",
                preAllocateTracks = 2,
@@ -137,7 +137,7 @@ circleplot <- function(datatable,
              track.margin = c(0, 0))
 
   chordDiagram(circosR,
-               circos.par(track.margin = c(0, 0)),
+               circos.par(track.margin = c(0.005, 0.005)),
                grid.col = circos.color,
                annotationTrack = "grid",
                preAllocateTracks = 3,
@@ -178,7 +178,7 @@ circleplot <- function(datatable,
                            for(i in 1:nrow(aux.tab1)){
                              start <- end
                              end <- end + aux.tab1[i,"Freq"]
-                             circos.rect(start, -0.3, end, 2,
+                             circos.rect(start, 0.01, end, 2,
                                          border = col_tab1[i],
                                          col = col_tab1[i],
                                          sector.index = sector,
@@ -187,7 +187,7 @@ circleplot <- function(datatable,
                            for(i in 1:nrow(aux.tab2)){
                              start <- end
                              end <- end + aux.tab2[i,"Freq"]
-                             circos.rect(start, -0.3, end, 2,
+                             circos.rect(start, 0.01, end, 2,
                                          border = col_tab2[i],
                                          col = col_tab2[i],
                                          sector.index = sector,
@@ -213,7 +213,7 @@ circleplot <- function(datatable,
                            for(i in 1:nrow(aux.tab1)){
                              start <- end
                              end <- end + aux.tab1[i,"Freq"]
-                             circos.rect(start, -1.2, end, 1.5,
+                             circos.rect(start, -0.9, end, 1.3,
                                          border = col_tab1[i],
                                          col = col_tab1[i],
                                          sector.index = sector,
@@ -222,7 +222,7 @@ circleplot <- function(datatable,
                            for(i in 1:nrow(aux.tab2)){
                              start <- end
                              end <- end + aux.tab2[i,"Freq"]
-                             circos.rect(start, -1.2, end, 1.5,
+                             circos.rect(start, -0.9, end, 1.3,
                                          border = col_tab2[i],
                                          col = col_tab2[i],
                                          sector.index = sector,
