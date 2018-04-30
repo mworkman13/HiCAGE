@@ -23,13 +23,27 @@ with detailed descriptions on its use.
 and visualization of interacting chromatin regions. 
 
 ## HiCAGE Environment Setup
-`HiCAGE` requires the following packages to be installed:
+`HiCAGE` relies on the following dependencies:
 ```{r message = FALSE, warning = FALSE}
-library(GenomicRanges)
-library(circlize)
-library(biomaRt)
 library(HiCAGE)
+library(readr)
+library(tidyr)
+library(dplyr)
+library(GenomicRanges)
+library(biomaRt)
+library(IRanges)
+library(magrittr)
+library(circlize)
+library(shiny)
+library(grDevices)
+library(graphics)
+library(utils)
+library(stats)
+library(plotrix)
+library(UpSetR)
 library(topGO)
+library(org.Hs.eg.db)
+library(org.Mm.eg.db)
 ```
 
 ## Input Data
@@ -50,7 +64,7 @@ or processed [tsv format](https://www.encodeproject.org/experiments/ENCSR000AEM/
 
 # Code
 Example format for initial data input:
-```{r message = FALSE, results= 'hide'}
+```{r message = FALSE, results = 'hide'}
 hic_chr20 <- system.file("extdata", "hic_chr20.txt", package = "HiCAGE")
 segment_chr20 <- system.file("extdata", "segment_chr20.bed", package = "HiCAGE")
 rna_chr20 <- system.file("extdata", "rna_chr20.tsv", package = "HiCAGE")
@@ -65,21 +79,15 @@ example <- overlap(hicfile = hic_chr20,
 
 ## Column Selection *(Optional based on data format)*
 ### Hi-C or 3C-based Data Column Selection
-Example Hi-C data file:
-```{r echo = FALSE, tidy = TRUE}
-head(read.table(file = hic_chr20, comment.char = "#", skip = 1))
-```
 
-Hi-C data files need to contain the columns in the following example:
+The `overlap` function defaults to selecting the appropriate columns using the
+format found in the example HiCCuPs looplist Hi-C file. If columns do not match 
+this order or if the Hi-C file contains additional unneeded columns, the 
+`hic.columns` argument in the `overlap` function can be used to select the 
+proper columns.
 
-Chrom1 | Chrom1Start | Chrom1End | Chrom2 | Chrom2Start | Chrom2End | Score
------- | ----------- | --------- | ------ | ----------- | --------- | -----
- "V1"  |     "V2"    |    "V3"   |  "V4"  |     "V5"    |    "V6"   |  "V8"
- 20    | 13300000    | 13310000  | 20     | 13520000    | 13530000  | 35
- 20    | 17520000    | 17530000  | 20     | 17590000    | 17600000  | 71
-
-The default `overlap` function selects these columns automatically. If columns 
-are not is this order, user can use `hic.columns` to select the proper columns:
+Hi-C data files need to contain the following columns in order (specified using
+`hic.columns` argument in the `overlap` function):
 
 ```{r eval = FALSE}
 overlap(hicfile = hic_chr20, 
@@ -88,12 +96,14 @@ overlap(hicfile = hic_chr20,
         hic.columns = c(1:6, 8))
 ```
 
-### Segmentation File Column Selection
-Example *StateHub/StatePaintR* segmentation data file:
-```{r echo = FALSE, tidy = TRUE}
-head(read.table(file = segment_chr20, comment.char = "#", skip = 1))
-```
+Chrom1 | Chrom1Start | Chrom1End | Chrom2 | Chrom2Start | Chrom2End | Score
+------ | ----------- | --------- | ------ | ----------- | --------- | -----
+ "V1"  |     "V2"    |    "V3"   |  "V4"  |     "V5"    |    "V6"   |  "V8"
+ 20    | 13300000    | 13310000  | 20     | 13520000    | 13530000  | 35
+ 20    | 17520000    | 17530000  | 20     | 17590000    | 17600000  | 71
 
+
+### Segmentation File Column Selection
 Segmentation data files need to contain the columns in the following example:
 
 Chrom | ChromStart | ChromEnd | Mark | Score 
@@ -114,20 +124,14 @@ overlap(hicfile = hic_chr20,
 ```
 
 ### RNA-seq Data File Column Selection
-Example RNA-seq data file:
-```{r echo = FALSE, tidy = TRUE}
-head(read.table(file = rna_chr20, comment.char = "#", skip = 1))
-```
-
 RNA-seq data files need to contain only Ensembl gene ID and gene expression 
 data. User can decide to use FPKM or TPM at their discretion:
 
 Ensembl ID        | FPKM | 
 ----------        | ---- | 
  "V1"             | "V7" | 
-ENSG00000249139.1 | 0    | 
-ENSG00000158901.7 | 0    | 
-
+ENSG00000101138.7 | 24.69| 
+ENSG00000101162.3 | 2.22 | 
 
 User can select columns in the RNA-seq data file using `rna.column` in the 
 `overlap` function:
@@ -157,7 +161,7 @@ overlap <- function(hicfile,
                     webhost = "www.ensembl.org")
 ```
 
-###Sample of available datasets in the "ensembl" Mart:
+###Example of available datasets in the "ensembl" Mart:
 
 dataset	                  |	description	                   |	version
 ---------	                |	---------	                     |	--------
@@ -171,8 +175,13 @@ ocuniculus_gene_ensembl	  |	Rabbit genes                   |	OryCun2.0
 xtropicalis_gene_ensembl	|	Xenopus genes                  |	JGI 4.2
 drerio_gene_ensembl      	|	Zebrafish genes                |	GRCz10
 
+A full list of currently available datasets can be found using:
+```{r eval = FALSE}
+ensembl <- useMart(biomart = "ensembl")
+listDatasets(ensembl)
+```
 
-###Currently available datasets in the "ENSEMBL_MART_MOUSE" Mart:
+###Example of available datasets in the "ENSEMBL_MART_MOUSE" Mart:
 
 dataset	                |	description	           |	version
 ---------	              |	---------	             |	------
@@ -193,8 +202,9 @@ mspreteij_gene_ensembl	|	Mouse SPRETEiJ genes 	 | SPRET_EiJ_v1
 mdba2j_gene_ensembl	    |	Mouse DBA2J genes      | DBA_2J_v1
 maj_gene_ensembl	      |	Mouse AJ genes         | A_J_v1
 
-###Currently available datasets in the "ENSEMBL_MART_MOUSE" Mart:
-```{r}
+A full list of currently available datasets in "ENSEMBL_MART_MOUSE" can be 
+found using:
+```{r eval = FALSE}
 ensembl <- useMart("ENSEMBL_MART_MOUSE")
 listDatasets(ensembl)
 
@@ -208,9 +218,7 @@ listEnsemblArchives()
 
 # Data Output
 ## `overlap` Data Output
-Data from the `overlap` function is output as a GRanges object. The GRanges 
-object is anchored using the first chromosome and range. All other information
-is stored as metadata
+Data from the `overlap` function is output as a data table
 
 ```{r echo = FALSE}
 head(example)
@@ -220,7 +228,7 @@ head(example)
 The `gogenelist` function allows the user to conveniently select a chromatin 
 mark of interest (proximalmark) interacting with another chromatin mark 
 (distalmark) and generates an ordered list of all genes and expression data 
-associated with the proximalmark.
+associated with the proximalmark. 
 
 ```{r}
 gogenelist(datafile = example,
@@ -230,15 +238,45 @@ gogenelist(datafile = example,
            species = "human",
            bio_mart = "ensembl",
            martset = "hsapiens_gene_ensembl",
-           webhost = "http://Feb2014.archive.ensembl.org",
+           webhost = "http://feb2014.archive.ensembl.org",
            geneOnto = FALSE,
            expression_cutoff = 0)
 ```
 
+If `geneOnto` argument is set to `TRUE`, gene ontology analysis will be run on
+genes found near the proximal mark interacting with the distal mark. GO analysis
+is run using the `TopGO` package. The background gene set is all genes found in
+the `overlap` data output file.
+
+```{r message = FALSE}
+gogenelist(datafile = example,
+           proximalmark = "PAR",
+           distalmark = "EAR",
+           gene.symbol = TRUE,
+           species = "human",
+           bio_mart = "ensembl",
+           martset = "hsapiens_gene_ensembl",
+           webhost = "http://feb2014.archive.ensembl.org",
+           geneOnto = TRUE,
+           expression_cutoff = 0.1)
+```
 
 # Figures
-
+## Circos plot of interactions
 ```{r fig.height = 6, fig.width = 6, fig.align = "center", fig.cap = "Figure output from HiCAGE circleplot function"}
 circleplot(datatable = example, display.legend = TRUE)
 ```
 
+##UpSetR-style plot of interactions
+```{r fig.height = 4, fig.width = 6, fig.align = "center", fig.cap = "Figure output from HiCAGE plotup function"}
+plotup(datafile = example)
+```
+
+# Graphical User Interface (GUI)
+A graphical user interface of `HiCAGE` can be launched locally with:
+```{r eval = FALSE}
+hicageshiny()
+```
+
+Alternatively, HiCAGE GUI can be accessed online at 
+https://junkdnalab.shinyapps.io/hicage/ without the need to install any software

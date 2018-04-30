@@ -114,9 +114,7 @@ gogenelist <- function(datafile,
                       dataset = martset,
                       host = webhost)
     gene <- getBM(attributes = c('ensembl_gene_id',
-                                 'chromosome_name',
-                                 'start_position',
-                                 'end_position'),
+                                 'hgnc_symbol'),
                   mart = ensembl)
 
     gene_list <- left_join(gene_list, gene, by = c("gene" = "ensembl_gene_id"))

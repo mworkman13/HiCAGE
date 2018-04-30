@@ -43,7 +43,8 @@ overlap <- function(hicfile,
                     webhost = "www.ensembl.org",
                     hic.columns = c(1:6,8),
                     segment.columns = c(1:5),
-                    rna.columns = c(1,7)) {
+                    rna.columns = c(1,7),
+                    manual.priority = FALSE) {
   #Progress Bar
   pb   <- txtProgressBar(1, 100,
                          initial = 6,
@@ -63,7 +64,7 @@ overlap <- function(hicfile,
   ensGene <- GRanges(seqnames = gene$chromosome_name,
                      ranges = IRanges(start = as.integer(gene$start_position),
                                       end = as.integer(gene$end_position)))
-  setTxtProgressBar(pb, 61)
+  setTxtProgressBar(pb, 60)
   # Manual select allows user to manual choose columns from Hi-C datafile
     HiCdata <- read_tsv(file = hicfile,
                         comment = "#",
@@ -106,6 +107,17 @@ overlap <- function(hicfile,
                            skip = 1,
                            guess_max = 100000)
   segmentation <- subset(segmentation, select = segment.columns)
+  if (manual.priority != FALSE) {
+    length(unique(segmentation$X4))
+    scorelist <- list()
+    for (i in 1:length(unique(segmentation$X4))) {
+      score <- 1/i
+      scorelist <- c(scorelist, score)
+    }
+    priority.list <- as.list(manual.priority)
+    priority <- do.call(rbind, Map(data.frame, state = priority.list, segscore = scorelist))
+    segmentation <- left_join(segmentation, priority, by = c("X4" = "state"))
+  }
   colnames(segmentation) <- c("chromosome",
                               "segstart",
                               "segend",
@@ -215,7 +227,7 @@ overlap <- function(hicfile,
       subset(select = -extraint)
     colnames(RNAseq) <- c("gene_id",
                           "FPKM")
-    setTxtProgressBar(pb, 76)
+    setTxtProgressBar(pb, 75)
 
 
     #Find nearest gene to each segmentation and Hi-C location; Add FPKM
@@ -235,7 +247,7 @@ overlap <- function(hicfile,
     HiCneargene1$ensembl <- as.character(HiCneargene1$ensembl)
     HiCneargene1 <- left_join(HiCneargene1, RNAseq,
                               by = c("ensembl" = "gene_id"))
-    setTxtProgressBar(pb, 86)
+    setTxtProgressBar(pb, 85)
 
     HiCneargene2 <- data.frame(nearest(chiaregion2, ensGene,
                                        ignore.strand=TRUE))
@@ -325,6 +337,7 @@ overlap <- function(hicfile,
     group_by(id) %>%
     filter(segscore1 == max(segscore1))
   region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
+  setTxtProgressBar(pb, 90)
   region2data <- region2data %>%
     group_by(id) %>%
     filter(segscore2 == max(segscore2))
@@ -363,58 +376,56 @@ overlap <- function(hicfile,
                                      "region2end",
                                      "mark2")]),]
 
-  final$mark1[final$mark1=="AR"] <- "EAR"
-  final$mark1[final$mark1=="ARC"] <- "EAR"
-  final$mark1[final$mark1=="EAR"] <- "EAR"
-  final$mark1[final$mark1=="EARC"] <- "EAR"
-  final$mark1[final$mark1=="EWR"] <- "EPR"
-  final$mark1[final$mark1=="EWRC"] <- "EPR"
-  final$mark1[final$mark1=="HET"] <- "HET"
-  final$mark1[final$mark1=="PAR"] <- "PAR"
-  final$mark1[final$mark1=="PARC"] <- "PAR"
-  final$mark1[final$mark1=="PWR"] <- "PPR"
-  final$mark1[final$mark1=="PWRC"] <- "PPR"
-  final$mark1[final$mark1=="RPS"] <- "RPS"
-  final$mark1[final$mark1=="SCR"] <- "SCR"
-  final$mark1[final$mark1=="TRS"] <- "TRS"
+#  final$mark1[final$mark1=="AR"] <- "EAR"
+#  final$mark1[final$mark1=="ARC"] <- "EAR"
+#  final$mark1[final$mark1=="EAR"] <- "EAR"
+#  final$mark1[final$mark1=="EARC"] <- "EAR"
+#  final$mark1[final$mark1=="EWR"] <- "EPR"
+#  final$mark1[final$mark1=="EWRC"] <- "EPR"
+#  final$mark1[final$mark1=="HET"] <- "HET"
+#  final$mark1[final$mark1=="PAR"] <- "PAR"
+#  final$mark1[final$mark1=="PARC"] <- "PAR"
+#  final$mark1[final$mark1=="PWR"] <- "PPR"
+#  final$mark1[final$mark1=="PWRC"] <- "PPR"
+#  final$mark1[final$mark1=="RPS"] <- "RPS"
+#  final$mark1[final$mark1=="SCR"] <- "SCR"
+#  final$mark1[final$mark1=="TRS"] <- "TRS"
+#  final$mark1[final$mark1=="CTCF"] <- "CTCF"
+#  final$mark1[final$mark1=="CTCFC"] <- "CTCF"
+#  final$mark1[final$mark1=="ER"] <- "ER"
+#  final$mark1[final$mark1=="ERC"] <- "ER"
+#  final$mark1[final$mark1=="EPR"] <- "EPR"
+#  final$mark1[final$mark1=="EPRC"] <- "EPR"
+#  final$mark1[final$mark1=="PR"] <- "PR"
+#  final$mark1[final$mark1=="PRC"] <- "PR"
+#  final$mark1[final$mark1=="PPR"] <- "PPR"
+#  final$mark1[final$mark1=="PPRC"] <- "PPR"
 
-  final$mark1[final$mark1=="CTCF"] <- "CTCF"
-  final$mark1[final$mark1=="CTCFC"] <- "CTCF"
-  final$mark1[final$mark1=="ER"] <- "ER"
-  final$mark1[final$mark1=="ERC"] <- "ER"
-  final$mark1[final$mark1=="EPR"] <- "EPR"
-  final$mark1[final$mark1=="EPRC"] <- "EPR"
-  final$mark1[final$mark1=="PR"] <- "PR"
-  final$mark1[final$mark1=="PRC"] <- "PR"
-  final$mark1[final$mark1=="PPR"] <- "PPR"
-  final$mark1[final$mark1=="PPRC"] <- "PPR"
 
-
-  final$mark2[final$mark2=="AR"] <- "EAR"
-  final$mark2[final$mark2=="ARC"] <- "EAR"
-  final$mark2[final$mark2=="EAR"] <- "EAR"
-  final$mark2[final$mark2=="EARC"] <- "EAR"
-  final$mark2[final$mark2=="EWR"] <- "EPR"
-  final$mark2[final$mark2=="EWRC"] <- "EPR"
-  final$mark2[final$mark2=="HET"] <- "HET"
-  final$mark2[final$mark2=="PAR"] <- "PAR"
-  final$mark2[final$mark2=="PARC"] <- "PAR"
-  final$mark2[final$mark2=="PWR"] <- "PPR"
-  final$mark2[final$mark2=="PWRC"] <- "PPR"
-  final$mark2[final$mark2=="RPS"] <- "RPS"
-  final$mark2[final$mark2=="SCR"] <- "SCR"
-  final$mark2[final$mark2=="TRS"] <- "TRS"
-
-  final$mark2[final$mark2=="CTCF"] <- "CTCF"
-  final$mark2[final$mark2=="CTCFC"] <- "CTCF"
-  final$mark2[final$mark2=="ER"] <- "ER"
-  final$mark2[final$mark2=="ERC"] <- "ER"
-  final$mark2[final$mark2=="EPR"] <- "EPR"
-  final$mark2[final$mark2=="EPRC"] <- "EPR"
-  final$mark2[final$mark2=="PR"] <- "PR"
-  final$mark2[final$mark2=="PRC"] <- "PR"
-  final$mark2[final$mark2=="PPR"] <- "PPR"
-  final$mark2[final$mark2=="PPRC"] <- "PPR"
+#  final$mark2[final$mark2=="AR"] <- "EAR"
+#  final$mark2[final$mark2=="ARC"] <- "EAR"
+#  final$mark2[final$mark2=="EAR"] <- "EAR"
+#  final$mark2[final$mark2=="EARC"] <- "EAR"
+#  final$mark2[final$mark2=="EWR"] <- "EPR"
+#  final$mark2[final$mark2=="EWRC"] <- "EPR"
+#  final$mark2[final$mark2=="HET"] <- "HET"
+#  final$mark2[final$mark2=="PAR"] <- "PAR"
+#  final$mark2[final$mark2=="PARC"] <- "PAR"
+#  final$mark2[final$mark2=="PWR"] <- "PPR"
+#  final$mark2[final$mark2=="PWRC"] <- "PPR"
+#  final$mark2[final$mark2=="RPS"] <- "RPS"
+#  final$mark2[final$mark2=="SCR"] <- "SCR"
+#  final$mark2[final$mark2=="TRS"] <- "TRS"
+#  final$mark2[final$mark2=="CTCF"] <- "CTCF"
+#  final$mark2[final$mark2=="CTCFC"] <- "CTCF"
+#  final$mark2[final$mark2=="ER"] <- "ER"
+#  final$mark2[final$mark2=="ERC"] <- "ER"
+#  final$mark2[final$mark2=="EPR"] <- "EPR"
+#  final$mark2[final$mark2=="EPRC"] <- "EPR"
+#  final$mark2[final$mark2=="PR"] <- "PR"
+#  final$mark2[final$mark2=="PRC"] <- "PR"
+#  final$mark2[final$mark2=="PPR"] <- "PPR"
+#  final$mark2[final$mark2=="PPRC"] <- "PPR"
 
   final <- final[,-1]
   setTxtProgressBar(pb, 100)
