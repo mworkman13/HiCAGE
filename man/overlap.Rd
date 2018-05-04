@@ -8,12 +8,12 @@ segmentation and RNA data}
 overlap(hicfile, segmentfile, rnafile, bio_mart = "ensembl",
   martset = "hsapiens_gene_ensembl", webhost = "www.ensembl.org",
   hic.columns = c(1:6, 8), segment.columns = c(1:5), rna.columns = c(1,
-  7))
+  7), manual.priority = FALSE, prune.priority = FALSE)
 }
 \arguments{
 \item{hicfile}{The chromosome conformation capture datafile}
 
-\item{segmentfile}{The segmentation datafile from StateHub}
+\item{segmentfile}{The segmentation datafile from StateHub for example}
 
 \item{rnafile}{The RNA gene expression datafile containing Ensembl IDs and
 FPKM or TPM normalized expression values}
@@ -29,10 +29,35 @@ that contain, in order, 'left chromosome', 'left start', 'left end', 'right
 chromosome', 'right start', 'right end', 'interaction score'}
 
 \item{segment.columns}{Columns from the segmentation data file that contain,
-in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'}
+in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'. Select only
+'Chromosome', 'Start', 'End', and 'Mark' if manual prioritization is
+desired}
 
 \item{rna.columns}{Columns from the RNA-seq data file that contain, in order,
 'GeneID', 'FPKM'}
+
+\item{manual.priority}{A concatenated list of state calls contained in the
+segmentation file that are to be used to manually prioritize state calls that
+fall within the same genomic region of the chromosome conformation capture
+file. This argument can be used if the segmentation file does not contain
+scores for state calls or if scores want to be overridden. The concatenated
+list should be in the form c("PAR", "EAR", "AR", "PPR", "EPR", "TRS", "HET")
+ordered from highest priority to lowest priority. In this case, only select
+columns containing'Chromosome', 'Start', 'End', and 'Mark' in the
+segmentation file using `segment.columns`.}
+
+\item{prune.priority}{A concatenated list of state calls contained in the
+segmentation file that are to be used to prioritize state calls that fall
+within the same genomic region of the chromosome conformation capture
+file and have identical scores. In this instance, segmentation scores will
+first be used to prioritize states, then prune.priority will be used to break
+ties. This argument is used so that only one interaction is defined for each
+line of the chromosome conformation capture file. Otherwise, multiple
+interactions can potentially be defined for a single chromsome interaction if
+two or more state calls in that region have identical segmentation scores.
+The concatenated list should be in the form c("PAR", "EAR", "AR", "PPR",
+"EPR", "TRS", "HET") ordered from highest priority to lowest priority. If
+manual.priority is set, this argument will have no effect}
 }
 \value{
 Returns a GRanges with each chromsome conformation capture segment

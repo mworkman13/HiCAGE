@@ -2,7 +2,7 @@
 #' segmentation and RNA data
 #'
 #' @param hicfile The chromosome conformation capture datafile
-#' @param segmentfile The segmentation datafile from StateHub
+#' @param segmentfile The segmentation datafile from StateHub for example
 #' @param rnafile The RNA gene expression datafile containing Ensembl IDs and
 #' FPKM or TPM normalized expression values
 #' @param bio_mart BiomaRt used for pulling gene name and location data
@@ -12,9 +12,32 @@
 #' that contain, in order, 'left chromosome', 'left start', 'left end', 'right
 #' chromosome', 'right start', 'right end', 'interaction score'
 #' @param segment.columns Columns from the segmentation data file that contain,
-#' in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'
+#' in order, 'Chromosome', 'Start', 'End', 'Mark', 'Score'. Select only
+#' 'Chromosome', 'Start', 'End', and 'Mark' if manual prioritization is
+#' desired
 #' @param rna.columns Columns from the RNA-seq data file that contain, in order,
 #' 'GeneID', 'FPKM'
+#' @param manual.priority A concatenated list of state calls contained in the
+#' segmentation file that are to be used to manually prioritize state calls that
+#' fall within the same genomic region of the chromosome conformation capture
+#' file. This argument can be used if the segmentation file does not contain
+#' scores for state calls or if scores want to be overridden. The concatenated
+#' list should be in the form c("PAR", "EAR", "AR", "PPR", "EPR", "TRS", "HET")
+#' ordered from highest priority to lowest priority. In this case, only select
+#' columns containing'Chromosome', 'Start', 'End', and 'Mark' in the
+#' segmentation file using `segment.columns`.
+#' @param prune.priority A concatenated list of state calls contained in the
+#' segmentation file that are to be used to prioritize state calls that both
+#' fall within the same genomic region of the chromosome conformation capture
+#' file and have identical scores. In this instance, segmentation scores will
+#' first be used to prioritize states, then prune.priority will be used to break
+#' ties. This argument is used so that only one interaction is defined for each
+#' line of the chromosome conformation capture file. Otherwise, multiple
+#' interactions can potentially be defined for a single chromsome interaction if
+#' two or more state calls in that region have identical segmentation scores.
+#' The concatenated list should be in the form c("PAR", "EAR", "AR", "PPR",
+#' "EPR", "TRS", "HET") ordered from highest priority to lowest priority. If
+#' manual.priority is set, this argument will have no effect
 #' @importFrom readr read_tsv read_csv
 #' @importFrom tidyr separate
 #' @importFrom dplyr mutate left_join full_join group_by bind_rows bind_cols
@@ -44,7 +67,8 @@ overlap <- function(hicfile,
                     hic.columns = c(1:6,8),
                     segment.columns = c(1:5),
                     rna.columns = c(1,7),
-                    manual.priority = FALSE) {
+                    manual.priority = FALSE,
+                    prune.priority = FALSE) {
   #Progress Bar
   pb   <- txtProgressBar(1, 100,
                          initial = 6,
@@ -78,10 +102,12 @@ overlap <- function(hicfile,
                            "region2end",
                            "score")
   #Remove duplicates from Hi-C data and subset into GRanges
-  HiCdata <- HiCdata[!duplicated(HiCdata[c("region1start",
-                                           "region1end",
-                                           "region2start",
-                                           "region2end")]),]
+    HiCdata <- HiCdata[!duplicated(HiCdata[c("region1chrom",
+                                             "region1start",
+                                             "region1end",
+                                             "region2chrom",
+                                             "region2start",
+                                             "region2end")]),]
 
   HiCdata$region1chrom <- gsub("^chr", "", HiCdata$region1chrom)
   HiCdata$region2chrom <- gsub("^chr", "", HiCdata$region2chrom)
@@ -107,7 +133,7 @@ overlap <- function(hicfile,
                            skip = 1,
                            guess_max = 100000)
   segmentation <- subset(segmentation, select = segment.columns)
-  if (manual.priority != FALSE) {
+  if (all(manual.priority != FALSE)) {
     length(unique(segmentation$X4))
     scorelist <- list()
     for (i in 1:length(unique(segmentation$X4))) {
@@ -333,6 +359,7 @@ overlap <- function(hicfile,
   region1data[is.na(region1data)] <- 0
   region2data[is.na(region2data)] <- 0
 
+  if (all(prune.priority == FALSE)) {
   region1data <- region1data %>%
     group_by(id) %>%
     filter(segscore1 == max(segscore1))
@@ -342,7 +369,34 @@ overlap <- function(hicfile,
     group_by(id) %>%
     filter(segscore2 == max(segscore2))
   region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
+  }
+  else {
+    scorelist <- list()
+    for (i in 1:length(unique(c(region1data$state1,region2data$state2)))) {
+      score <- 1/i
+      scorelist <- c(scorelist, score)
+    }
+    prune.list <- as.list(prune.priority)
+    priority <- do.call(rbind, Map(data.frame, state = prune.list, prunescore = scorelist))
+    priority$state <- as.character(priority$state)
+    region1data <- left_join(region1data, priority, by = c("state1" = "state"))
+    region2data <- left_join(region2data, priority, by = c("state2" = "state"))
 
+    region1data <- region1data %>%
+      group_by(id) %>%
+      filter(segscore1 == max(segscore1)) %>%
+      filter(prunescore == max(prunescore))
+    region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
+    region1data$prunescore <- NULL
+
+    region2data <- region2data %>%
+      group_by(id) %>%
+      filter(segscore2 == max(segscore2)) %>%
+      filter(prunescore == max(prunescore))
+    region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
+    region2data$prunescore <- NULL
+
+  }
 
   final <- as.data.frame(full_join(region1data, region2data, by = "id"))
 
@@ -375,57 +429,6 @@ overlap <- function(hicfile,
                                      "region2start",
                                      "region2end",
                                      "mark2")]),]
-
-#  final$mark1[final$mark1=="AR"] <- "EAR"
-#  final$mark1[final$mark1=="ARC"] <- "EAR"
-#  final$mark1[final$mark1=="EAR"] <- "EAR"
-#  final$mark1[final$mark1=="EARC"] <- "EAR"
-#  final$mark1[final$mark1=="EWR"] <- "EPR"
-#  final$mark1[final$mark1=="EWRC"] <- "EPR"
-#  final$mark1[final$mark1=="HET"] <- "HET"
-#  final$mark1[final$mark1=="PAR"] <- "PAR"
-#  final$mark1[final$mark1=="PARC"] <- "PAR"
-#  final$mark1[final$mark1=="PWR"] <- "PPR"
-#  final$mark1[final$mark1=="PWRC"] <- "PPR"
-#  final$mark1[final$mark1=="RPS"] <- "RPS"
-#  final$mark1[final$mark1=="SCR"] <- "SCR"
-#  final$mark1[final$mark1=="TRS"] <- "TRS"
-#  final$mark1[final$mark1=="CTCF"] <- "CTCF"
-#  final$mark1[final$mark1=="CTCFC"] <- "CTCF"
-#  final$mark1[final$mark1=="ER"] <- "ER"
-#  final$mark1[final$mark1=="ERC"] <- "ER"
-#  final$mark1[final$mark1=="EPR"] <- "EPR"
-#  final$mark1[final$mark1=="EPRC"] <- "EPR"
-#  final$mark1[final$mark1=="PR"] <- "PR"
-#  final$mark1[final$mark1=="PRC"] <- "PR"
-#  final$mark1[final$mark1=="PPR"] <- "PPR"
-#  final$mark1[final$mark1=="PPRC"] <- "PPR"
-
-
-#  final$mark2[final$mark2=="AR"] <- "EAR"
-#  final$mark2[final$mark2=="ARC"] <- "EAR"
-#  final$mark2[final$mark2=="EAR"] <- "EAR"
-#  final$mark2[final$mark2=="EARC"] <- "EAR"
-#  final$mark2[final$mark2=="EWR"] <- "EPR"
-#  final$mark2[final$mark2=="EWRC"] <- "EPR"
-#  final$mark2[final$mark2=="HET"] <- "HET"
-#  final$mark2[final$mark2=="PAR"] <- "PAR"
-#  final$mark2[final$mark2=="PARC"] <- "PAR"
-#  final$mark2[final$mark2=="PWR"] <- "PPR"
-#  final$mark2[final$mark2=="PWRC"] <- "PPR"
-#  final$mark2[final$mark2=="RPS"] <- "RPS"
-#  final$mark2[final$mark2=="SCR"] <- "SCR"
-#  final$mark2[final$mark2=="TRS"] <- "TRS"
-#  final$mark2[final$mark2=="CTCF"] <- "CTCF"
-#  final$mark2[final$mark2=="CTCFC"] <- "CTCF"
-#  final$mark2[final$mark2=="ER"] <- "ER"
-#  final$mark2[final$mark2=="ERC"] <- "ER"
-#  final$mark2[final$mark2=="EPR"] <- "EPR"
-#  final$mark2[final$mark2=="EPRC"] <- "EPR"
-#  final$mark2[final$mark2=="PR"] <- "PR"
-#  final$mark2[final$mark2=="PRC"] <- "PR"
-#  final$mark2[final$mark2=="PPR"] <- "PPR"
-#  final$mark2[final$mark2=="PPRC"] <- "PPR"
 
   final <- final[,-1]
   setTxtProgressBar(pb, 100)

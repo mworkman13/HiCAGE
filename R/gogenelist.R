@@ -15,7 +15,7 @@
 #' @importFrom readr read_tsv read_csv
 #' @importFrom dplyr left_join bind_rows
 #' @importFrom biomaRt useEnsembl getBM
-#' @importFrom topGO runTest GenTable annFUN
+#' @importFrom topGO runTest GenTable annFUN.org groupGOTerms
 #' @import org.Hs.eg.db org.Hs.eg.db
 #' @import org.Mm.eg.db org.Mm.eg.db
 #' @import utils
@@ -88,7 +88,8 @@ gogenelist <- function(datafile,
     geneList <- factor(as.integer (full_gene %in% inter_gene))
     names(geneList) <- full_gene
 
-    GOdata <- new("topGOdata",ontology = "CC",
+    GOdata <- new("topGOdata",
+                  ontology = "CC",
                   allGenes = geneList,
                   description ="GO Analysis",
                   annot = annFUN.org,

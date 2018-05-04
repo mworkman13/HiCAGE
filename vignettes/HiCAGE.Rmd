@@ -1,6 +1,6 @@
 ---
 title: "HiCAGE: Hi-C Annotation and Graphics Ensemble"
-author: "Michael J. Workman and Dennis J. Hazelett"
+author: "Michael J. Workman, Tiago C. Silva, Simon G. Coetzee, Dennis J. Hazelett"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
@@ -13,7 +13,7 @@ vignette: >
 ---
 
 # Introduction
-The `HiCAGE` (Hi-C Annotation and Plotting Software) package offers users the 
+The `HiCAGE` (Hi-C Annotation and Graphics Ensemble) package offers users the 
 ability to annotate and visualize 3C-based genomic data at whole-genome scale. 
 This document describes the functionalities of the package and provides users 
 with detailed descriptions on its use. 
@@ -123,6 +123,25 @@ overlap(hicfile = hic_chr20,
         segment.columns = c(1:5))
 ```
 
+### Manual state prioritization 
+`HiCAGE` uses *Segmentation Score* found in the segmentation file to prioritze 
+state calls in the genomic regions defined in the Hi-C file. Alternatively, 
+users can manually select state prioritization, if scores do not exit or are not
+desired, using the `manual.priority` argument in the `overlap` function. In this
+instance, users select columns in the segmentation file containing **Chrom**, 
+**ChromStart**, **ChromEnd**, and **State** using the `segment.columns` 
+argument. Then define priority by entering state calls in the `manual.priority`
+argument in order of highest priority to lowest priority.
+
+```{r eval = FALSE}
+overlap(hicfile = hic_chr20, 
+        segmentfile = segment_chr20, 
+        rnafile = rna_chr20,
+        segment.columns = c(1:4)
+        manual.priority = c("PAR", "PPR", "EAR", "EPR", "HET"))
+```
+
+
 ### RNA-seq Data File Column Selection
 RNA-seq data files need to contain only Ensembl gene ID and gene expression 
 data. User can decide to use FPKM or TPM at their discretion:
@@ -228,27 +247,11 @@ head(example)
 The `gogenelist` function allows the user to conveniently select a chromatin 
 mark of interest (proximalmark) interacting with another chromatin mark 
 (distalmark) and generates an ordered list of all genes and expression data 
-associated with the proximalmark. 
+associated with the proximalmark. HGNC symbols can be included by setting 
+`gene.symbol` argument to TRUE. A gene expression cutoff can be set with 
+`expression_cutoff` argument to filter gene list.
 
 ```{r}
-gogenelist(datafile = example,
-           proximalmark = "PAR",
-           distalmark = "EAR",
-           gene.symbol = FALSE,
-           species = "human",
-           bio_mart = "ensembl",
-           martset = "hsapiens_gene_ensembl",
-           webhost = "http://feb2014.archive.ensembl.org",
-           geneOnto = FALSE,
-           expression_cutoff = 0)
-```
-
-If `geneOnto` argument is set to `TRUE`, gene ontology analysis will be run on
-genes found near the proximal mark interacting with the distal mark. GO analysis
-is run using the `TopGO` package. The background gene set is all genes found in
-the `overlap` data output file.
-
-```{r message = FALSE}
 gogenelist(datafile = example,
            proximalmark = "PAR",
            distalmark = "EAR",
@@ -257,8 +260,27 @@ gogenelist(datafile = example,
            bio_mart = "ensembl",
            martset = "hsapiens_gene_ensembl",
            webhost = "http://feb2014.archive.ensembl.org",
-           geneOnto = TRUE,
-           expression_cutoff = 0.1)
+           geneOnto = FALSE,
+           expression_cutoff = 1)
+```
+
+If `geneOnto` argument is set to `TRUE`, gene ontology analysis will be run on
+genes found near the proximal mark interacting with the distal mark. GO analysis
+is run using the `TopGO` package. The background gene set is all genes found in
+the `overlap` data output file.
+
+```{r message = FALSE}
+go.analysis <- gogenelist(datafile = example,
+                          proximalmark = "PAR",
+                          distalmark = "EAR",
+                          gene.symbol = FALSE,
+                          species = "human",
+                          bio_mart = "ensembl",
+                          martset = "hsapiens_gene_ensembl",
+                          webhost = "http://feb2014.archive.ensembl.org",
+                          geneOnto = TRUE,
+                          expression_cutoff = 0.1)
+head(go.analysis$GO_Results)
 ```
 
 # Figures
@@ -278,5 +300,5 @@ A graphical user interface of `HiCAGE` can be launched locally with:
 hicageshiny()
 ```
 
-Alternatively, HiCAGE GUI can be accessed online at 
+Alternatively, a HiCAGE GUI can be accessed online at 
 https://junkdnalab.shinyapps.io/hicage/ without the need to install any software

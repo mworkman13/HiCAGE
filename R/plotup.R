@@ -1,6 +1,7 @@
 #' Generates UpSetR-style plot from overlap data
 #'
 #' @param datafile The object output from the overlap function
+#' @param ... Additional arguments passed to upset function from UpSetR package
 #' @importFrom UpSetR fromList upset
 #' @import utils
 #' @export
@@ -15,7 +16,7 @@
 #'                          rnafile = rna_chr20)
 #' plotup(datafile = overlapoutput)
 
-plotup <- function(datafile) {
+plotup <- function(datafile, ...) {
 
   m3 <- unique(append(datafile$mark1, datafile$mark2))
   marklist <- list()
@@ -30,5 +31,5 @@ plotup <- function(datafile) {
   }
 
   markout <- fromList(marklist)
-  upset(markout, nsets = length(marklist))
+  upset(markout, nsets = length(marklist), ...)
 }

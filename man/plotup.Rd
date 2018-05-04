@@ -4,10 +4,12 @@
 \alias{plotup}
 \title{Generates UpSetR-style plot from overlap data}
 \usage{
-plotup(datafile)
+plotup(datafile, ...)
 }
 \arguments{
 \item{datafile}{The object output from the overlap function}
+
+\item{...}{Additional arguments passed to upset function from UpSetR package}
 }
 \value{
 Returns an UpSetR plot from overlap data
