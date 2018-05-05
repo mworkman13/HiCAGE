@@ -67,9 +67,11 @@ hicageshiny <- function() {
                   helpText(h4(list(em("Step 2"), "- Input Data Files:"))),
                   fileInput('hicdata', 'Choose Hi-C data file: Use a tab-delimited *.txt file or tab separated value *.tsv file'),
                   fileInput('segmentdata', 'Choose Segmentation file: Use a *.bed file or tab-delimited *.txt file'),
-                  fileInput('rnadata', 'Choose RNA-seq file: Use a tab-delimited *.txt file or tab separated value *.tsv file'),
+                  fileInput('rnadata', 'Choose RNA-seq file: Use a tab-delimited *.txt file or tab separated value *.tsv file.
+                            Currently, only Ensembl IDs are supported'),
                   helpText(h4(list(em("Step 3"), "- Make sure to select the appropriate 'Data Columns' and
-                                   'Order' for the Hi-C, Segmentation, and RNA-seq files using the sidebar"))),
+                                   'Order' for the Hi-C, Segmentation, and RNA-seq files using the sidebar
+                                   (default values may not be appropriate for your data structure)"))),
                   helpText(h4(list(em("Step 4"), "- Run", em("HiCAGE"))))
                   ),
 

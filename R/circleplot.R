@@ -45,6 +45,25 @@ circleplot <- function(datatable,
                        circos.color = NULL,
                        ...) {
 
+  if (length(unique(datatable$mark1 == 1))) {
+    datatable <- datatable[,c(8:14, 1:7, 15)]
+    datatable <- setNames(datatable, c("region1chrom",
+                                       "region1start",
+                                       "region1end",
+                                       "mark1",
+                                       "segscore1",
+                                       "gene1",
+                                       "logFPKM1",
+                                       "region2chrom",
+                                       "region2start",
+                                       "region2end",
+                                       "mark2",
+                                       "segscore2",
+                                       "gene2",
+                                       "logFPKM2",
+                                       "HiCscore"))
+  }
+
   finaltable <- (table(datatable$mark1, datatable$mark2))
 
   #Data frame for circos plot
@@ -93,6 +112,12 @@ circleplot <- function(datatable,
   tab1[is.na(tab1)] <- 0
   tab2 <- heatmap[order(heatmap$mark2,rev(heatmap$mark1)),]
   tab2[is.na(tab2)] <- 0
+  tab3 <- tab1[,c(2,1,3,4)]
+  colnames(tab3) [1] <- "mark1"
+  colnames(tab3) [2] <- "mark2"
+  tab3$Freq <- 0
+  tab1 <- rbind(tab1, tab3)
+  tab2 <- rbind(tab2, tab3)
 
   circos.trackPlotRegion(ylim = c(0, 3),
                          circos.par("track.height" = 0.01),
@@ -164,6 +189,15 @@ circleplot <- function(datatable,
   tab1[is.na(tab1)] <- 0
   tab2 <- heatmap[order(heatmap$mark2,rev(heatmap$mark1)),]
   tab2[is.na(tab2)] <- 0
+  tab3 <- tab1[,c(2,1,3:6)]
+  colnames(tab3) [1] <- "mark1"
+  colnames(tab3) [2] <- "mark2"
+  tab3$Freq <- 0
+  tab3$Avg.Score <- 0
+  tab3$logFPKM1 <- 0
+  tab3$logFPKM2 <- 0
+  tab1 <- rbind(tab1, tab3)
+  tab2 <- rbind(tab2, tab3)
 
   circos.trackPlotRegion(ylim = c(0, 3),
                          circos.par("track.height" = 0.01),
