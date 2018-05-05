@@ -13,7 +13,7 @@ Description: This package takes chromsome conformation capture data as input
     heatmaps showing average score of chromsome conformation capture 
     interaction between segmentation marks as well as average FPKM values for
     genes in each type of interaction.
-Depends: R (>= 3.4)
+Depends: R (>= 3.5.0)
 Imports: readr,
         tidyr, 
         dplyr,
@@ -32,7 +32,7 @@ Imports: readr,
         topGO,
         org.Hs.eg.db,
         org.Mm.eg.db
-License: GPL (>= 2)
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 biocViews: GeneExpression, GenomeAnnotation, DNA3DStructure, 

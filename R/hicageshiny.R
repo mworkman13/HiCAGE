@@ -1,6 +1,7 @@
 #' Launch HiCAGE Shiny application
 #'
 #' @import shiny
+#' @import shinydashboard
 #' @importFrom readr read_tsv
 #' @export
 #' @return When run, function will launch the HiCAGE Shiny application - a GUI
@@ -8,103 +9,130 @@
 hicageshiny <- function() {
   options(shiny.maxRequestSize=100*1024^2)
   shinyApp(
-    ui = shinyUI(pageWithSidebar(
-      headerPanel(list(em("HiCAGE:"), "Hi-C Annotation and Graphics Ensemble")),
-      sidebarPanel(
-        helpText(h4(list(em("Step 1"), "- Select Genome and Build:"))),
-        selectInput("genomes", label = NULL,
-                    choices = list("Human GRCh37(hg19)" = 1,
-                                   "Human GRCh38(hg38)" = 2,
-                                   "Mouse NCBI Build 37(mm9)" = 3,
-                                   "Mouse GRCm38(mm10)" = 4),
-                    selected = 1),
-        helpText(h4(list(em("Step 2"), "- Input Data Files:"))),
-        fileInput('hicdata', 'Choose Hi-C data file'),
-        fileInput('segmentdata', 'Choose Segmentation file'),
-        fileInput('rnadata', 'Choose RNA-seq file'),
-        helpText(h4(list(em("Step 3"), "- Select Data Columns:"))),
-        textInput('hiccolumns',
-                  label = list(h5(strong("Enter Hi-C Column Numbers")),
-                               h6("Order = Chrom1, Chrom1start, Chrom1end,
-                                  Chrom2, Chrom2start, Chrom2end, Score")),
-                  value = "1, 2, 3, 4, 5, 6, 8"),
-        textInput('segmentcolumns',
-                  label = list(h5(strong("Enter Segmentation Column Numbers")),
-                               h6("Order = Chromosome, Start, End,
-                                  Mark, Score")),
-                  value = "1, 2, 3, 4, 5"),
-        textInput('rnacolumns',
-                  label = list(h5(strong("Enter RNA Column Numbers")),
-                               h6("Order = GeneID, FPKM")),
-                  value = c("1, 7")),
-        helpText(h4(em("Step 4 - Go!"))),
-        actionButton('goButton', "Run HiCAGE")
+    ui = shinyUI(dashboardPage(
+      dashboardHeader(title = list(em("HiCAGE:"), "Hi-C Annotation and Graphics Ensemble"),
+                      titleWidth = 480),
+      dashboardSidebar(
+        sidebarMenu(id = "inTabset",
+                    menuItem("Data Input", tabName = "datainput", icon = icon("folder-open")),
+                    menuItem("Hi-C Data", tabName = "hicdatatab", icon = icon("list")),
+                    conditionalPanel("input.inTabset === 'hicdatatab'",
+                                     textInput('hiccolumns',
+                                               label = list(h5(strong("Enter Hi-C Column Numbers")),
+                                                            h6("Order = Chrom1, Chrom1start, Chrom1end,
+                                                               Chrom2, Chrom2start, Chrom2end, Score")),
+                                               value = "1, 2, 3, 4, 5, 6, 8")),
+                    menuItem("Segmentation Data", tabName = "segmentdatatab", icon = icon("list-alt")),
+                    conditionalPanel("input.inTabset === 'segmentdatatab'",
+                                     textInput('segmentcolumns',
+                                               label = list(h5(strong("Enter Segmentation Column Numbers")),
+                                                            h6("Order = Chromosome, Start, End,
+                                                               Mark, Score")),
+                                               value = "1, 2, 3, 4, 5")),
+                    menuItem("RNA-seq Data", tabName = "rnaseqdatatab", icon = icon("list-ol")),
+                    conditionalPanel("input.inTabset === 'rnaseqdatatab'",
+                                     textInput('rnacolumns',
+                                               label = list(h5(strong("Enter RNA Column Numbers")),
+                                                            h6("Order = GeneID, FPKM")),
+                                               value = c("1, 7"))),
+                    menuItem("Final Data", tabName = "finaldatatab", icon = icon("th")),
+                    menuItem("Circos Plot", tabName = "circosplottab", icon = icon("bullseye")),
+                    menuItem("UpsetR Plot", tabName = "upsetplottab", icon = icon("bar-chart")),
+                    menuItem("Gene List", tabName = "genelisttab", icon = icon("exchange")),
+                    menuItem("GO Analysis", tabName = "goanalysistab", icon = icon("cogs")),
+                    menuItem(actionButton('goButton', "Run HiCAGE"))
+                                     )
+                    ),
+      dashboardBody(
+        tags$head(
+          tags$style(HTML('
+                          .skin-blue .main-header .logo {
+                          background-color: #3c8dbc;
+                          }
+                          .skin-blue .main-header .logo:hover {
+                          background-color: #3c8dbc;
+                          }
+                          ')),
+          tags$style(HTML(".dataTables_wrapper { overflow-x: scroll; }" )
+          )),
+        tabItems(
+          tabItem(tabName = "datainput",
+                  helpText(h4(list(em("Step 1"), "- Select Genome and Build:"))),
+                  selectInput("genomes", label = NULL,
+                              choices = list("Human GRCh37(hg19)" = 1,
+                                             "Human GRCh38(hg38)" = 2,
+                                             "Mouse NCBI Build 37(mm9)" = 3,
+                                             "Mouse GRCm38(mm10)" = 4),
+                              selected = 1),
+                  helpText(h4(list(em("Step 2"), "- Input Data Files:"))),
+                  fileInput('hicdata', 'Choose Hi-C data file: Use a tab-delimited *.txt file or tab separated value *.tsv file'),
+                  fileInput('segmentdata', 'Choose Segmentation file: Use a *.bed file or tab-delimited *.txt file'),
+                  fileInput('rnadata', 'Choose RNA-seq file: Use a tab-delimited *.txt file or tab separated value *.tsv file'),
+                  helpText(h4(list(em("Step 3"), "- Make sure to select the appropriate 'Data Columns' and
+                                   'Order' for the Hi-C, Segmentation, and RNA-seq files using the sidebar"))),
+                  helpText(h4(list(em("Step 4"), "- Run", em("HiCAGE"))))
                   ),
-      mainPanel(
-        tabsetPanel(id = "inTabset",
-                    tabPanel("Hi-C Data",
-                             dataTableOutput('contents')),
-                    tabPanel("Segmentation Data",
-                             dataTableOutput('contents2')),
-                    tabPanel("RNA-seq Data",
-                             dataTableOutput('contents3')),
-                    tabPanel("Final Data",
-                             dataTableOutput('finaldata'),
-                             downloadButton('downloadData', 'Download')),
-                    tabPanel("Circos Plot",
-                             plotOutput('circosplot'),
-                             fluidRow(column(3, sliderInput("hicscale",
-                                                            "Hi-C Score Range:",
-                                                            min = 0,
-                                                            max = 1000,
-                                                            value = c(0, 100),
-                                                            step = 10)),
-                                      column(4,
-                                             sliderInput(
-                                               "rnascale",
-                                               "RNA Expression Range:",
-                                               min = 0,
-                                               max = 20,
-                                               value = c(0, 5),
-                                               step = 0.5)),
-                                      column(4,
-                                             actionButton("reload", "Reload"))),
-                             downloadButton('downloadCircos', 'Download')),
-                    tabPanel("UpSetR Plot",
-                             plotOutput('upsetplot'),
-                             tags$script("$(document).on('shiny:connected',
-                                         function(event) {
-                                         var myWidth = $(window).width();
-                                         Shiny.onInputChange('shiny_width',myWidth)});"),
-                             tags$script("$(document).on('shiny:connected',
-                                         function(event) {
-                                         var myHeight = $(window).height();
-                                         Shiny.onInputChange('shiny_height',myHeight)});"),
-                             downloadButton('downloadUpset', 'Download')),
-                    tabPanel("Gene List",
-                             fluidRow(column(3, uiOutput("Box1")),
-                                      column(4, uiOutput("Box2")),
-                                      column(5, h5(strong("Run GO Analysis with current set?"))),
-                                      column(5, actionButton("geneonto", "Run GO Analysis!"))),
-                             fluidRow(column(3, sliderInput("genecut",
-                                                            "Set Gene Expression Cutoff",
-                                                            min = 0,
-                                                            max = 20,
-                                                            value = 0,
-                                                            step = 0.1))),
-                             dataTableOutput('genelist'),
-                             downloadButton('downloadGene', 'Download')),
-                    tabPanel("GO Analysis",
-                             dataTableOutput('godata'),
-                             downloadButton('downloadgo', 'Download'))
 
-        )
-      )
-      )),
+          tabItem(tabName = "hicdatatab",
+                  dataTableOutput('contents')),
+          tabItem(tabName = "segmentdatatab",
+                  dataTableOutput('contents2')),
+          tabItem(tabName = "rnaseqdatatab",
+                  dataTableOutput('contents3')),
+          tabItem(tabName = "finaldatatab",
+                  dataTableOutput('finaldata'),
+                  downloadButton('downloadData', 'Download')),
+          tabItem(tabName = "circosplottab",
+                  plotOutput('circosplot'),
+                  fluidRow(column(3, sliderInput("hicscale",
+                                                 "Hi-C Score Range:",
+                                                 min = 0,
+                                                 max = 1000,
+                                                 value = c(0, 100),
+                                                 step = 10)),
+                           column(4,
+                                  sliderInput(
+                                    "rnascale",
+                                    "RNA Expression Range:",
+                                    min = 0,
+                                    max = 20,
+                                    value = c(0, 5),
+                                    step = 0.5)),
+                           column(4,
+                                  actionButton("reload", "Reload"))),
+                  downloadButton('downloadCircos', 'Download')),
+          tabItem(tabName = "upsetplottab",
+                  plotOutput('upsetplot'),
+                  tags$script("$(document).on('shiny:connected',
+                              function(event) {
+                              var myWidth = $(window).width();
+                              Shiny.onInputChange('shiny_width',myWidth)});"),
+                  tags$script("$(document).on('shiny:connected',
+                              function(event) {
+                              var myHeight = $(window).height();
+                              Shiny.onInputChange('shiny_height',myHeight)});"),
+                  downloadButton('downloadUpset', 'Download')),
+          tabItem(tabName = "genelisttab",
+                  fluidRow(column(3, uiOutput("Box1")),
+                           column(4, uiOutput("Box2")),
+                           column(5, h5(strong("Run GO Analysis with current set?"))),
+                           column(5, actionButton("geneonto", "Run GO Analysis!"))),
+                  fluidRow(column(3, sliderInput("genecut",
+                                                 "Set Gene Expression Cutoff",
+                                                 min = 0,
+                                                 max = 20,
+                                                 value = 0.1,
+                                                 step = 0.1))),
+                  dataTableOutput('genelist'),
+                  downloadButton('downloadGene', 'Download')),
+          tabItem(tabName = "goanalysistab",
+                  dataTableOutput('godata'),
+                  downloadButton('downloadgo', 'Download'))
+                  )
+                  )
+        )),
 
-    server = function(input, output, session) {
-      session$onSessionEnded(stopApp)
-      #Load Hi-C data file
+    server = function(input, output, session) {  #Load Hi-C data file
       output$contents <- renderDataTable({
         inFile1 <- input$hicdata
 
@@ -112,9 +140,7 @@ hicageshiny <- function() {
           return(NULL)
 
         read_tsv(inFile1$datapath,
-                 col_names = FALSE,
                  comment = "#",
-                 skip = 1,
                  guess_max = 100000)
       })
 
@@ -139,9 +165,7 @@ hicageshiny <- function() {
           return(NULL)
 
         read_tsv(inFile3$datapath,
-                 col_names = FALSE,
-                 comment = "#",
-                 skip = 1)
+                 comment = "#")
       })
 
       #Render Final Data Frame
@@ -197,8 +221,12 @@ hicageshiny <- function() {
         })
 
         #Change to Final Data tab when Run button is pressed
-        updateTabsetPanel(session, "inTabset",
-                          selected = "Final Data")
+        observeEvent(input$goButton, {
+          updateTabsetPanel(session, "inTabset",
+                            selected = "finaldatatab")
+        })
+
+
 
         #Prepare Final table of all interaction for downloading to csv file
         output$downloadData <- downloadHandler(
@@ -219,14 +247,23 @@ hicageshiny <- function() {
           plotsub <- FALSE
         }
 
-        output$circosplot <- renderPlot({
+
+        circos.plot <- reactive({
           input$reload
           isolate({
-          circleplot(get.overlaps(),
-                     plot.subset = plotsub,
-                     hic.range = c(input$hicscale),
-                     rna.range = c(input$rnascale))
+            circleplot(get.overlaps(),
+                       plot.subset = plotsub,
+                       hic.range = c(input$hicscale),
+                       rna.range = c(input$rnascale))
+          })
         })
+        output$circosplot <- renderPlot({
+          withProgress(message = 'Processing',
+                       detail = 'This may take a moment...', value = 0, {
+                         result <- circos.plot()
+                         incProgress(1, detail = "Completed")
+                       })
+          print(result)
         })
         ##Prepare Circos Plot for Download
         output$downloadCircos <- downloadHandler(
@@ -249,8 +286,14 @@ hicageshiny <- function() {
 
         #Generate UpSetR Plot
         output$upsetplot <- renderPlot({
-          plotup(get.overlaps())
+          withProgress(message = 'Processing',
+                       detail = 'This may take a moment...', value = 0, {
+                         result <- plotup(get.overlaps())
+                         incProgress(1, detail = "Completed")
+                       })
+          return(result)
         })
+
         ##Prepare UpSetR plot for download
         output$downloadUpset <- downloadHandler(
           filename = function() {
@@ -266,54 +309,79 @@ hicageshiny <- function() {
 
 
         #Go Gene List
-        output$Box1 = renderUI(
-          selectInput("golist1",
-                      label = "Get genes near:",
-                      choices = c(unique(c(get.overlaps()$mark1,
-                                           get.overlaps()$mark2)))))
-        output$Box2 = renderUI(
-          selectInput("golist2",
-                      label = "Interacting with:",
-                      choices = c(unique(c(get.overlaps()$mark1,
-                                           get.overlaps()$mark2)))))
+        if (is.null(input$rnadata)) {
+
+        }
+        else {
+          output$Box1 = renderUI(
+            selectInput("golist1",
+                        label = "Get genes near:",
+                        choices = c(unique(c(get.overlaps()$mark1,
+                                             get.overlaps()$mark2)))))
+          output$Box2 = renderUI(
+            selectInput("golist2",
+                        label = "Interacting with:",
+                        choices = c(unique(c(get.overlaps()$mark1,
+                                             get.overlaps()$mark2)))))
+
+          output$genelist <- renderDataTable(
+            gogenelist(get.overlaps(),
+                       proximalmark = input$golist1,
+                       distalmark = input$golist2,
+                       geneOnto = FALSE,
+                       expression_cutoff = input$genecut)
+          )
 
 
-        output$genelist <- renderDataTable(
-           gogenelist(get.overlaps(),
-                      proximalmark = input$golist1,
-                      distalmark = input$golist2,
-                      geneOnto = FALSE,
-                      expression_cutoff = input$genecut)
-        )
+          output$downloadGene <- downloadHandler(
+            filename = function() {
+              paste("genelist-",
+                    Sys.time(), "-",
+                    input$golist1, "-",
+                    input$golist2, ".csv", sep="")
+            },
+            content = function(file) {
+              write.csv(get.genelist(), file, row.names = FALSE)
+            }
+          )
 
-        output$downloadGene <- downloadHandler(
-          filename = function() {
-            paste("genelist-",
-                  Sys.time(), "-",
-                  input$golist1, "-",
-                  input$golist2, ".csv", sep="")
-          },
-          content = function(file) {
-            write.csv(get.genelist(), file, row.names = FALSE)
+          #GO Analysis
+          ##Pick genome for biomaRt based on selected from dropbox
+          if (input$genomes == 1) {
+            gospecies <- "human"
           }
-        )
+          else if (input$genomes == 2){
+            gospecies <- "human"
+          }
+          else if (input$genomes == 3){
+            gospecies <- "mouse"
+          }
+          else {
+            gospecies <- "mouse"
+          }
+          go.analysis <- eventReactive(input$geneonto, {
+            gogenelist(get.overlaps(),
+                       proximalmark = input$golist1,
+                       distalmark = input$golist2,
+                       species = gospecies,
+                       geneOnto = TRUE,
+                       expression_cutoff = input$genecut)
 
-        #GO Analysis
-        observeEvent(input$geneonto, {
-          go.analysis <- reactive({
+          })
+          output$godata <- renderDataTable({
             withProgress(message = 'Processing',
-                         detail = 'This may take a moment...',
-                         value = 0, {
-            return(gogenelist(get.overlaps(),
-                              proximalmark = input$golist1,
-                              distalmark = input$golist2,
-                              geneOnto = TRUE,
-                              expression_cutoff = input$genecut))
-            })
+                         detail = 'This may take a moment...', value = 0, {
+                           result <- go.analysis()$GO_Results
+                           incProgress(1, detail = "Completed")
+                         })
+            return(result)
           })
 
-          output$godata <- renderDataTable(
-            return(go.analysis()$GO_Results))
+          #Change to GO Analysis tab when Run button is pressed
+          observeEvent(input$geneonto, {
+            updateTabsetPanel(session, "inTabset",
+                              selected = "goanalysistab")
+          })
 
           output$downloadgo <- downloadHandler(
             filename = function() {
@@ -327,14 +395,7 @@ hicageshiny <- function() {
             }
           )
 
-          #Change to GO Analysis tab when Run button is pressed
-          updateTabsetPanel(session, "inTabset",
-                            selected = "GO Analysis")
-
-        })
-
-
+        }
       })
-
     })
 }

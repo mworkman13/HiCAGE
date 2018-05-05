@@ -12,12 +12,11 @@
 #' @param gbuild The genome version of mart to be used
 #' @param geneOnto Run gene ontology enrichment using TopGO
 #' @param expresscut Cutoff for expression value in gene list
-#' @importFrom readr read_tsv read_csv
 #' @importFrom dplyr left_join bind_rows
 #' @importFrom biomaRt useEnsembl getBM
-#' @importFrom topGO runTest GenTable annFUN.org groupGOTerms
-#' @import org.Hs.eg.db org.Hs.eg.db
-#' @import org.Mm.eg.db org.Mm.eg.db
+#' @importFrom topGO runTest GenTable annFUN.org
+#' @importFrom org.Hs.eg.db org.Hs.eg.db
+#' @importFrom org.Mm.eg.db org.Mm.eg.db
 #' @import utils
 #' @export
 #' @return Returns a gene list sorted by gene expression levels of all genes

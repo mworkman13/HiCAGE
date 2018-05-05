@@ -38,7 +38,7 @@
 #' The concatenated list should be in the form c("PAR", "EAR", "AR", "PPR",
 #' "EPR", "TRS", "HET") ordered from highest priority to lowest priority. If
 #' manual.priority is set, this argument will have no effect
-#' @importFrom readr read_tsv read_csv
+#' @importFrom readr read_tsv read_csv cols
 #' @importFrom tidyr separate
 #' @importFrom dplyr mutate left_join full_join group_by bind_rows bind_cols
 #' anti_join filter
@@ -67,8 +67,8 @@ overlap <- function(hicfile,
                     hic.columns = c(1:6,8),
                     segment.columns = c(1:5),
                     rna.columns = c(1,7),
-                    manual.priority = FALSE,
-                    prune.priority = FALSE) {
+                    manual.priority = NULL,
+                    prune.priority = NULL) {
   #Progress Bar
   pb   <- txtProgressBar(1, 100,
                          initial = 6,
@@ -92,6 +92,7 @@ overlap <- function(hicfile,
   # Manual select allows user to manual choose columns from Hi-C datafile
     HiCdata <- read_tsv(file = hicfile,
                         comment = "#",
+                        col_types = cols(),
                         guess_max = 100000)
     HiCdata <- subset(HiCdata, select = hic.columns)
     colnames(HiCdata) <- c("region1chrom",
@@ -129,11 +130,12 @@ overlap <- function(hicfile,
   #http://statehub.org/modeltracks/default_model/
   segmentation <- read_tsv(file = segmentfile,
                            col_names = FALSE,
+                           col_types = cols(),
                            comment = "#",
                            skip = 1,
                            guess_max = 100000)
   segmentation <- subset(segmentation, select = segment.columns)
-  if (all(manual.priority != FALSE)) {
+  if (!is.null(manual.priority)) {
     length(unique(segmentation$X4))
     scorelist <- list()
     for (i in 1:length(unique(segmentation$X4))) {
@@ -217,14 +219,44 @@ overlap <- function(hicfile,
     region1data[is.na(region1data)] <- 0
     region2data[is.na(region2data)] <- 0
 
-    region1data <- region1data %>%
-      group_by(id) %>%
-      filter(segscore1 == max(segscore1))
-    region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
-    region2data <- region2data %>%
-      group_by(id) %>%
-      filter(segscore2 == max(segscore2))
-    region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
+    if (is.null(prune.priority)) {
+      region1data <- region1data %>%
+        group_by(id) %>%
+        filter(segscore1 == max(segscore1))
+      region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
+      setTxtProgressBar(pb, 90)
+      region2data <- region2data %>%
+        group_by(id) %>%
+        filter(segscore2 == max(segscore2))
+      region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
+    }
+    else {
+      scorelist <- list()
+      for (i in 1:length(unique(c(region1data$state1,region2data$state2)))) {
+        score <- 1/i
+        scorelist <- c(scorelist, score)
+      }
+      prune.list <- as.list(prune.priority)
+      priority <- do.call(rbind, Map(data.frame, state = prune.list, prunescore = scorelist))
+      priority$state <- as.character(priority$state)
+      region1data <- left_join(region1data, priority, by = c("state1" = "state"))
+      region2data <- left_join(region2data, priority, by = c("state2" = "state"))
+
+      region1data <- region1data %>%
+        group_by(id) %>%
+        filter(segscore1 == max(segscore1)) %>%
+        filter(prunescore == max(prunescore))
+      region1data <- region1data[!duplicated(region1data[c("id", "state1")]),]
+      region1data$prunescore <- NULL
+
+      region2data <- region2data %>%
+        group_by(id) %>%
+        filter(segscore2 == max(segscore2)) %>%
+        filter(prunescore == max(prunescore))
+      region2data <- region2data[!duplicated(region2data[c("id", "state2")]),]
+      region2data$prunescore <- NULL
+
+    }
 
 
     final <- as.data.frame(full_join(region1data, region2data, by = "id"))
@@ -247,6 +279,7 @@ overlap <- function(hicfile,
     #Parse RNA seq file
     RNAseq <- read_tsv(rnafile,
                        comment = "#",
+                       col_types = cols(),
                        guess_max = 100000) %>%
       subset(select = rna.columns) %>%
       separate(col = 1, into = c("gene_id", "extraint"), sep = "\\.") %>%
@@ -263,6 +296,12 @@ overlap <- function(hicfile,
     colnames(epineargene) <- "ensembl"
     epineargene$ensembl <- as.character(epineargene$ensembl)
     epineargene <- left_join(epineargene, RNAseq, by = c("ensembl" = "gene_id"))
+    if (nrow(epineargene) != nrow(segmentation)) {
+      stop("Potential duplicate Ensembl IDs detected in RNAseq file.
+           Pseudoautosomal Regions with the same Ensembl ID, mapping to both X
+           and Y chromsomes may be the problem. Please correct in RNAseq file
+           before proceeding")
+    }
     segmentation <- cbind(segmentation, epineargene)
 
     HiCneargene1 <- data.frame(nearest(chiaregion1, ensGene,
@@ -359,7 +398,7 @@ overlap <- function(hicfile,
   region1data[is.na(region1data)] <- 0
   region2data[is.na(region2data)] <- 0
 
-  if (all(prune.priority == FALSE)) {
+  if (is.null(prune.priority)) {
   region1data <- region1data %>%
     group_by(id) %>%
     filter(segscore1 == max(segscore1))

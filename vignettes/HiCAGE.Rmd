@@ -141,7 +141,25 @@ overlap(hicfile = hic_chr20,
         manual.priority = c("PAR", "PPR", "EAR", "EPR", "HET"))
 ```
 
+### Pruning state calls
+`HiCAGE` uses *Segmentation Score* found in the segmentation file to prioritze 
+state calls in the genomic regions defined in the Hi-C file. However, 
+occasionally two states in one region may have identical segementation scores.
+In this instance, the genomic region will be annontated with both calls in the 
+final datatable, creating duplicate rows of interacting regions with all the top
+state calls. If this is not desired, `prune.priority` can be set in `overlap` 
+to prioritize states after prioritizing using segmentation scores. A 
+concatenated list is entered in the form c("PAR", "EAR", "AR", "PPR", "EPR", 
+"TRS", "HET") ordered from highest priority to lowest priority. If
+`manual.priority` is set, this argument will have no effect.
 
+```{r eval = FALSE}
+overlap(hicfile = hic_chr20, 
+        segmentfile = segment_chr20, 
+        rnafile = rna_chr20,
+        segment.columns = c(1:4)
+        prune.priority = c("PAR", "PPR", "EAR", "EPR", "HET"))
+```
 ### RNA-seq Data File Column Selection
 RNA-seq data files need to contain only Ensembl gene ID and gene expression 
 data. User can decide to use FPKM or TPM at their discretion:
