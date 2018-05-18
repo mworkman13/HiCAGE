@@ -65,6 +65,7 @@ hicageshiny <- function() {
                                              "Mouse GRCm38(mm10)" = 4),
                               selected = 1),
                   helpText(h4(list(em("Step 2"), "- Input Data Files:"))),
+                  helpText(h5("NOTE: Sample data can be found at http://www.github.com/mworkman13/HiCAGE/inst/extdata")),
                   fileInput('hicdata', 'Choose Hi-C data file: Use a tab-delimited *.txt file or tab separated value *.tsv file'),
                   fileInput('segmentdata', 'Choose Segmentation file: Use a *.bed file or tab-delimited *.txt file'),
                   fileInput('rnadata', 'Choose RNA-seq file: Use a tab-delimited *.txt file or tab separated value *.tsv file.
