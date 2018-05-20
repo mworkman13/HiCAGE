@@ -193,7 +193,7 @@ circleplot <- function(datatable,
   colnames(tab3) [1] <- "mark1"
   colnames(tab3) [2] <- "mark2"
   tab3$Freq <- 0
-  tab3$Avg.Score <- 0
+  tab3$Avg.Score <- hic.range[1]
   tab3$logFPKM1 <- 0
   tab3$logFPKM2 <- 0
   tab1 <- rbind(tab1, tab3)
@@ -269,23 +269,19 @@ circleplot <- function(datatable,
 
   hiccolor <- color.gradient(c(1,1), c(1,0), c(1,0), nslices = 200)
   rnacolor <- color.gradient(c(1,0), c(1,0), c(1,0), nslices = 200)
-  rna.labels <- c(c(min(rna.range),
-                    max(rna.range)))
-  hic.labels <- c(min(hic.range),
-                  max(hic.range))
 
   if (display.legend == TRUE & plot.subset == FALSE) {
     color.legend(xl = -0.98,
                  yb = -1.0,
                  xr = -0.50,
                  yt = -0.91,
-                 legend = rna.labels,
+                 legend = rna.range,
                  rect.col= rnacolor)
     color.legend(xl = 0.50,
                  yb = -1.0,
                  xr = 0.98,
                  yt = -0.91,
-                 legend = hic.labels,
+                 legend = hic.range,
                  rect.col= hiccolor)
     text(-0.74, -1.045, labels = rna.legend)
     text(0.74, -1.045, labels = hic.legend)
@@ -295,16 +291,16 @@ circleplot <- function(datatable,
                  yb = -1.0,
                  xr = -0.50,
                  yt = -0.91,
-                 legend = rna.labels,
+                 legend = rna.range,
                  rect.col= rnacolor)
     text(-0.74, -1.045, labels = rna.legend)
   }
-  if (display.legend == "HIC" | plot.subset == "hicscore") {
+  if (display.legend == TRUE | plot.subset == TRUE) {
     color.legend(xl = 0.50,
                  yb = -1.0,
                  xr = 0.98,
                  yt = -0.91,
-                 legend = hic.labels,
+                 legend = hic.range,
                  rect.col= hiccolor)
     text(0.74, -1.045, labels = hic.legend)
   }
