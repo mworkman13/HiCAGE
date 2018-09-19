@@ -143,7 +143,9 @@ overlap <- function(hicfile,
       scorelist <- c(scorelist, score)
     }
     priority.list <- as.list(manual.priority)
-    priority <- do.call(rbind, Map(data.frame, state = priority.list, segscore = scorelist))
+    priority <- do.call(rbind, Map(data.frame,
+                                   state = priority.list,
+                                   segscore = scorelist))
     segmentation <- left_join(segmentation, priority, by = c("X4" = "state"))
   }
   colnames(segmentation) <- c("chromosome",
@@ -237,10 +239,16 @@ overlap <- function(hicfile,
         scorelist <- c(scorelist, score)
       }
       prune.list <- as.list(prune.priority)
-      priority <- do.call(rbind, Map(data.frame, state = prune.list, prunescore = scorelist))
+      priority <- do.call(rbind, Map(data.frame,
+                                     state = prune.list,
+                                     prunescore = scorelist))
       priority$state <- as.character(priority$state)
-      region1data <- left_join(region1data, priority, by = c("state1" = "state"))
-      region2data <- left_join(region2data, priority, by = c("state2" = "state"))
+      region1data <- left_join(region1data,
+                               priority,
+                               by = c("state1" = "state"))
+      region2data <- left_join(region2data,
+                               priority,
+                               by = c("state2" = "state"))
 
       region1data <- region1data %>%
         group_by(id) %>%
@@ -416,7 +424,9 @@ overlap <- function(hicfile,
       scorelist <- c(scorelist, score)
     }
     prune.list <- as.list(prune.priority)
-    priority <- do.call(rbind, Map(data.frame, state = prune.list, prunescore = scorelist))
+    priority <- do.call(rbind, Map(data.frame,
+                                   state = prune.list,
+                                   prunescore = scorelist))
     priority$state <- as.character(priority$state)
     region1data <- left_join(region1data, priority, by = c("state1" = "state"))
     region2data <- left_join(region2data, priority, by = c("state2" = "state"))

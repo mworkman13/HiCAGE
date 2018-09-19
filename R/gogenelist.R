@@ -14,9 +14,9 @@
 #' @param expresscut Cutoff for expression value in gene list
 #' @importFrom dplyr left_join bind_rows
 #' @importFrom biomaRt useEnsembl getBM
-#' @importFrom topGO runTest GenTable annFUN.org
 #' @importFrom org.Hs.eg.db org.Hs.eg.db
 #' @importFrom org.Mm.eg.db org.Mm.eg.db
+#' @import topGO
 #' @import utils
 #' @export
 #' @return Returns a gene list sorted by gene expression levels of all genes
@@ -94,10 +94,18 @@ gogenelist <- function(datafile,
                   annot = annFUN.org,
                   mapping = orgdb,
                   ID = "Ensembl")
-    resultFis <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-    resultFisWeight <- runTest(GOdata, algorithm = "weight", statistic = "fisher")
-    resultKS <- runTest(GOdata, algorithm = "classic", statistic = "ks")
-    resultKS.elim <- runTest(GOdata, algorithm = "elim", statistic = "ks")
+    resultFis <- runTest(GOdata,
+                         algorithm = "classic",
+                         statistic = "fisher")
+    resultFisWeight <- runTest(GOdata,
+                               algorithm = "weight",
+                               statistic = "fisher")
+    resultKS <- runTest(GOdata,
+                        algorithm = "classic",
+                        statistic = "ks")
+    resultKS.elim <- runTest(GOdata,
+                             algorithm = "elim",
+                             statistic = "ks")
     allGO = usedGO(object = GOdata)
     allRes <- GenTable(GOdata,
                        classicFisher_p.value = resultFis,
